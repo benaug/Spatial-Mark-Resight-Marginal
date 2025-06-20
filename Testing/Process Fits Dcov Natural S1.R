@@ -1,0 +1,65 @@
+
+library(coda)
+burnin <- 500
+n.datasets <- 100
+true <- c(0.5,exp(-0.5),NA,0.5,0.5,0.75,0.15,0.1,0,0.75,0.25,NA)
+n.par <- length(true)
+true <- matrix(true,ncol=n.par,nrow=n.datasets,byrow=TRUE)
+
+ests1 <- ests2 <- ests3 <- bias1 <- bias2 <- bias3 <- cover <- sds <- matrix(NA,n.datasets,n.par)
+N.M.max <- N.UM.max <- time <- rep(NA,n.datasets)
+HPDs <- array(NA,c(n.datasets,n.par,2))
+for(d in 1:n.datasets){
+  setwd("D:/Sync/Cornell/Github/Spatial-Mark-Resight-Marginal/Testing/Dcov_Natural_S1_datasets")
+  filename <- paste0("S1_data_",d,".RData")
+  load(filename)
+  setwd("D:/Sync/Cornell/Github/Spatial-Mark-Resight-Marginal/Testing/Dcov_Natural_S1_fits")
+  filename <- paste0("S1_",d,".chain_1.RData")
+  load(filename)
+  post <- mcmc(out$mvSamples[-c(1:burnin),])
+  N.M.max[d] <- max(post[,4])
+  N.UM.max[d] <- max(post[,5])
+  post <- post[,-c(4,5)]
+  #add M and UM lambda
+  post <- cbind(post,post[,"lambda.N.M"]+post[,"lambda.N.UM"])
+  colnames(post)[ncol(post)] <- "lambda.N"
+  post <- mcmc(post[,-c(5:6)])
+  # plot(post)
+  time[d] <- out$time
+  true[d,3] <- data$N
+  true[d,n.par] <- data$lambda.N
+  ests1[d,] <- colMeans(post)
+  ests2[d,] <- MCMCglmm::posterior.mode(post)
+  ests3[d,] <- apply(post,2,quantile,probs=0.5)
+  #N and lambda need higher bandwidths
+  ests2[d,c(1,3)] <- MCMCglmm::posterior.mode(post[,c(1,3)],adjust=2)
+  bias1[d,] <- (ests1[d,] - true[d,])/true[d,]
+  bias2[d,] <- (ests2[d,] - true[d,])/true[d,]
+  bias3[d,] <- (ests3[d,] - true[d,])/true[d,]
+  HPDs[d,,] <- HPDinterval(post)
+  sds[d,] <- apply(post,2,sd)
+  cover[d,] <- 1*(HPDs[d,,1]<=true[d,]&HPDs[d,,2]>=true[d,])
+}
+
+
+par(mfrow=c(1,1),ask=FALSE)
+par.names <- colnames(post)
+
+colMeans(true)
+colMeans(ests1) #means
+colMeans(ests2,na.rm=TRUE) #modes
+colMeans(cover,na.rm=TRUE)
+100*colMeans(bias1)
+100*colMeans(bias2)
+#CVs
+CVs <- 100*colMeans(sds/abs(ests2))
+
+#modes
+summary2 <- rbind(colMeans(true),colMeans(ests2),100*colMeans(bias2),colMeans(cover),CVs)
+colnames(summary2) <- par.names
+rownames(summary2) <- c("true","est","rel.bias","cover","CV")
+round(summary2,3)
+
+
+sort(N.max)
+mean(time)
