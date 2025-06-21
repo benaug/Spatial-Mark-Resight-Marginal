@@ -242,8 +242,8 @@ for(i in 1:M){
 
 #can add block sampler if lam0, sigma, and/or lambda.N posteriors highly correlated
 #probably not needed with telemetry
-# conf$addSampler(target = c("lam0","sigma"),type = 'RW_block',
-#                 control = list(adaptive=TRUE),silent = TRUE)
+conf$addSampler(target = c("lam0","sigma"),type = 'RW_block',
+                control = list(adaptive=TRUE),silent = TRUE)
 #AF_slice pretty fast here
 conf$addSampler(target = c("D0","D.beta1"),
                 type = 'AF_slice',control=list(adaptive=TRUE),silent = TRUE)

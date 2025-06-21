@@ -73,7 +73,7 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
       tel.inds <- which(sum(is.na(locs[,,1]))<max.locs)
       n.locs.ind <- sum(!is.na(locs[,,1]))
     }
-    print("using telemetry to initialize telmetered s. Remove from data if not using in the model.")
+    print("using telemetry to initialize telemetered s. Remove from data if not using in the model.")
     #update s starts for telemetry guys
     for(i in tel.inds){
       if(n.locs.ind[i]>1){
