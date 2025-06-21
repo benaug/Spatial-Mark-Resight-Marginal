@@ -56,17 +56,17 @@ NimModel <- nimbleCode({
   }#custom Metropolis-Hastings update for N.UM/z[(n.marked+1):M]
   
   #Unidentified detections by type
-  #1) marked with no ID detections
+  #1 marked with no ID detections
   bigLam.marked[1:J] <- GetbigLam(lam=lam[1:n.marked,1:J],z=z[1:n.marked])
   lam.mnoID[1:J] <- bigLam.marked[1:J]*K1D[1:J]*theta.marked[2]
   y.mnoID[1:J] ~ dPoissonVector(lam.mnoID[1:J],z=1) #plug in z=1 to reuse dPoissonVector
   
-  #2) unmarked detections
+  #2 unmarked detections
   bigLam.unmarked[1:J] <- GetbigLam(lam=lam[(n.marked+1):M,1:J],z=z[(n.marked+1):M])
   lam.um[1:J] <- bigLam.unmarked[1:J]*K1D[1:J]*theta.unmarked[2]
   y.um[1:J] ~ dPoissonVector(lam.um[1:J],z=1) #plug in z=1 to reuse dPoissonVector
   
-  #3) unknown marked status
+  #3 unknown marked status
   lam.unk[1:J] <- bigLam.marked[1:J]*K1D[1:J]*theta.marked[3] + bigLam.unmarked[1:J]*K1D[1:J]*theta.unmarked[3]
   y.unk[1:J] ~ dPoissonVector(lam.unk[1:J],z=1) #plug in z=1 to reuse dPoissonVector
   

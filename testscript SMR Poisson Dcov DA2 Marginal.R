@@ -37,8 +37,8 @@ X <- expand.grid(3:11,3:11) #make a trapping array
 #theta is probability of observing each sample type for marked and unmarked individuals
 theta.marked <- c(0.75,0.15,0.1) #P(ID, Marked no ID, unk status). must sum to 1
 theta.unmarked <- 0.75 #prob known marked status. #P(ID, Marked no ID, unk status)=(0,theta.unmarked,1-theta.unmarked)
-obstype <- "poisson"
-tlocs <- 10 #number of telemetry locs/marked individual. For "premarked"
+obstype <- "poisson" #can also simulate "negbin", but cannot fit with marginalized approach
+tlocs <- 10 #number of telemetry locs/marked individual.
 
 #get some colors
 library(RColorBrewer)
@@ -88,8 +88,6 @@ min.dists <- apply(dists,2,min)
 InSS[min.dists<(3*sigma)] <- 1
 image(x.vals,y.vals,matrix(D.cov*InSS,n.cells.x,n.cells.y),main="Habitat",col=cols1)
 points(X,pch=4,col="darkred",lwd=2)
-
-image(x.vals,y.vals,matrix(InSS,n.cells.x,n.cells.y),main="Habitat")
 
 #Density covariates
 D.beta0 <- -0.5 #data simulator uses intercept for marked + unmarked

@@ -81,17 +81,17 @@ NimModel <- nimbleCode({
     }
     
     #Unidentified detections by type
-    #1) marked with no ID detections
+    #1 marked with no ID detections
     bigLam.marked[g,1:J[g]] <- GetbigLam(lam=lam[g,1:M1[g],1:J[g]],z=z[g,1:M1[g]])
     lam.mnoID[g,1:J[g]] <- bigLam.marked[g,1:J[g]]*K1D[g,1:J[g]]*theta.marked[g,2]
     y.mnoID[g,1:J[g]] ~ dPoissonVector(lam.mnoID[g,1:J[g]],z=1) #plug in z=1 to reuse dPoissonVector
     
-    #2) unmarked detections
+    #2 unmarked detections
     bigLam.unmarked[g,1:J[g]] <- GetbigLam(lam=lam[g,(M1[g]+1):M.both[g],1:J[g]],z=z[g,(M1[g]+1):M.both[g]])
     lam.um[g,1:J[g]] <- bigLam.unmarked[g,1:J[g]]*K1D[g,1:J[g]]*theta.unmarked[g,2]
     y.um[g,1:J[g]] ~ dPoissonVector(lam.um[g,1:J[g]],z=1) #plug in z=1 to reuse dPoissonVector
     
-    #3) unknown marked status
+    #3 unknown marked status
     lam.unk[g,1:J[g]] <- bigLam.marked[g,1:J[g]]*K1D[g,1:J[g]]*theta.marked[g,3] + 
       bigLam.unmarked[g,1:J[g]]*K1D[g,1:J[g]]*theta.unmarked[g,3]
     y.unk[g,1:J[g]] ~ dPoissonVector(lam.unk[g,1:J[g]],z=1) #plug in z=1 to reuse dPoissonVector

@@ -33,8 +33,8 @@ buff <- rep(2,N.session) #state space buffer
 #theta is probability of observing each sample type for marked and unmarked individuals
 theta.marked <- matrix(rep(c(0.75,0.15,0.1),N.session),nrow=N.session,byrow=TRUE) #P(ID, Marked no ID, unk status). must sum to 1
 theta.unmarked <- rep(0.75,N.session) #prob known marked status. #P(ID, Marked no ID, unk status)=(0,theta.unmarked,1-theta.unmarked)
-obstype <- "poisson"
-tlocs <- c(10,10,10) #number of telemetry locs/marked individual in each session. For "premarked"
+obstype <- "poisson" #can also simulate "negbin", but cannot fit with marginalized approach
+tlocs <- c(10,10,10) #number of telemetry locs/marked individual in each session.
 
 #make an SCR trapping array. Making the trapping array size vary by session
 X <- vector("list",N.session)
