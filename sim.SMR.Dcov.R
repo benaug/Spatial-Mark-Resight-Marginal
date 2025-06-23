@@ -52,6 +52,7 @@ sim.SMR.Dcov <-
         }
       }
     }else{
+      print("K1D not provided, assuming trap operation is perfect.")
       K1D <- rep(K,J)
     }
     

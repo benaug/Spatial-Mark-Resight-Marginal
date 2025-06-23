@@ -55,6 +55,7 @@ sim.SMR.Dcov.Generalized <-
         }
       }
     }else{
+      print("K1D.mark not provided, assuming trap operation is perfect.")
       K1D.mark <- rep(K.mark,J.mark)
     }
     
@@ -69,6 +70,7 @@ sim.SMR.Dcov.Generalized <-
         }
       }
     }else{
+      print("K1D.sight not provided, assuming trap operation is perfect.")
       K1D.sight <- rep(K.sight,J.sight)
     }
     

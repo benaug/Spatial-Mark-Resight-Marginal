@@ -13,7 +13,6 @@ sim.SMR.multisession.Dcov <-
     if(length(D.beta1)!=N.session)stop("D.beta1 must be of length N.session")
     if(length(n.marked)!=N.session)stop("n.marked must be of length N.session")
     if(length(lam0)!=N.session)stop("lam0 must be of length N.session")
-    # if(length(theta.d)!=N.session)stop("theta.d must be of length N.session")
     if(length(sigma)!=N.session)stop("sigma must be of length N.session")
     if(length(K)!=N.session)stop("K must be of length N.session")
     if(length(X)!=N.session)stop("X must be of length N.session")
@@ -23,9 +22,13 @@ sim.SMR.multisession.Dcov <-
     if(!all(rowSums(theta.marked)==1))stop("theta.marked rows must all sum to 1.")
     if(length(theta.unmarked)!=N.session)stop("theta.unmarked must be of length N.session")
     if(obstype=="negbin"){
-      if(length(theta.d)!=N.session)stop("theta.d must be of length N.session")
+      if(!any(is.na(theta.d))){
+        if(length(theta.d)!=N.session)stop("theta.d must be of length N.session")
+      }else{
+        theta.d <- rep(NA,N.session)
+      }
     }else{
-      theta.d=rep(theta.d,N.session)
+      theta.d <- rep(NA,N.session)
     }
     if(length(theta.unmarked)!=N.session)stop("theta.unmarked must be of length N.session")
     
@@ -35,14 +38,21 @@ sim.SMR.multisession.Dcov <-
       J[g] <- nrow(X[[g]])
     }
     
+    if(any(is.na(K1D))){
+      print("K1D not provided, assuming trap operation is perfect.")
+      K1D <- vector("list",N.session)
+      for(g in 1:N.session){
+        K1D[[g]] <- rep(K[g],J[g])
+      }
+    }
+    
     #simulate sessions one at a time
     data <- vector("list",N.session)
     for(g in 1:N.session){
       data[[g]] <- sim.SMR.Dcov(D.beta0=D.beta0[g],D.beta1=D.beta1[g],D.cov=D.cov[[g]],InSS=InSS[[g]],res=res[g],
-                                n.marked=n.marked[g],
-                                theta.marked=theta.marked[g,],theta.unmarked=theta.unmarked[g],
-                                lam0=lam0[g],sigma=sigma[g],K=K[g],X=X[[g]],xlim=xlim[g,],ylim=ylim[g,],tlocs=tlocs[g],
-                                obstype=obstype,theta.d=theta.d[g])
+                                n.marked=n.marked[g],theta.marked=theta.marked[g,],theta.unmarked=theta.unmarked[g],
+                                lam0=lam0[g],sigma=sigma[g],K=K[g],K1D=K1D[[g]],X=X[[g]],xlim=xlim[g,],ylim=ylim[g,],
+                                tlocs=tlocs[g],obstype=obstype,theta.d=theta.d[g])
     }
     return(data)
   }

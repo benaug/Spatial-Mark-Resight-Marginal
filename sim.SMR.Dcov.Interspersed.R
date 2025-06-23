@@ -46,6 +46,7 @@ sim.SMR.Dcov.Interspersed <-
     
     #trap operation
     if(any(is.na(K2D))){
+      print("K2D not provided, assuming trap operation is perfect.")
       K2D <- matrix(1,J,K)
     }
     
