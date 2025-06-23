@@ -104,7 +104,7 @@ zSampler <- nimbleFunction(
         reject <- FALSE #we auto reject if you select a detected individual
         
         #find all z's currently on *excluding marked individuals*
-        z.on <- which(model$z[g,(n.marked+1):M]==1) + n.marked #cannot reuse objects created from R functions, (z.on, instead of z.on)
+        z.on <- which(model$z[g,(n.marked+1):M]==1) + n.marked
         
         n.z.on <- length(z.on)
         if(n.z.on>0){ #skip if no unmarked z's to turn off, otherwise nimble will crash
