@@ -2,12 +2,14 @@ sSampler <- nimbleFunction(
   # name = 'sampler_RW',
   contains = sampler_BASE,
   setup = function(model, mvSaved, target, control) {
+    g <- control$g
     i <- control$i
     J.mark <- control$J.mark
     J.sight <- control$J.sight
     res <- control$res
     xlim <- control$xlim
     ylim <- control$ylim
+    n.cells <- control$n.cells
     n.cells.x <- control$n.cells.x
     n.cells.y <- control$n.cells.y
     n.locs.ind <- control$n.locs.ind
@@ -22,24 +24,24 @@ sSampler <- nimbleFunction(
     ## node list generation
     # targetAsScalar <- model$expandNodeNames(target, returnScalarComponents = TRUE)
     calcNodes <- model$getDependencies(target)
-    s.nodes <- c(model$expandNodeNames(paste("s[",i,",",1:2,"]")),
-                 model$expandNodeNames(paste("s.cell[",i,"]")),
-                 model$expandNodeNames(paste("dummy.data[",i,"]")))
+    s.nodes <- c(model$expandNodeNames(paste("s[",g,",",i,",",1:2,"]")),
+                 model$expandNodeNames(paste("s.cell[",g,",",i,"]")),
+                 model$expandNodeNames(paste("dummy.data[",g,",",i,"]")))
     #if we have telemetry for this individual, add locs to s.nodes
     if(n.locs.ind>0){
-      loc.nodes <- model$expandNodeNames(paste("locs[",i,",1:",n.locs.ind,",",1:2,"]"))
+      loc.nodes <- model$expandNodeNames(paste("locs[",g,",",i,",1:",n.locs.ind,",",1:2,"]"))
       s.nodes <- c(s.nodes,loc.nodes)
     }
-    y.mark.nodes <- model$expandNodeNames(paste("y.mark[",i,",1:",J.mark,"]"))
-    y.mID.nodes <- model$expandNodeNames(paste("y.mID[",i,",1:",J.sight,"]"))
-    y.mnoID.nodes <- model$expandNodeNames("y.mnoID")
-    y.um.nodes <- model$expandNodeNames("y.um")
-    y.unk.nodes <- model$expandNodeNames("y.unk")
-    pd.nodes <- model$expandNodeNames(paste("pd[",i,",1:",J.mark,"]"))
-    lam.nodes <- model$expandNodeNames(paste("lam[",i,",1:",J.sight,"]"))
-    lam.mnoID.nodes <- model$expandNodeNames(paste("lam.mnoID[1:",J.sight,"]"))
-    lam.um.nodes <- model$expandNodeNames(paste("lam.um[1:",J.sight,"]"))
-    lam.unk.nodes <- model$expandNodeNames(paste("lam.unk[1:",J.sight,"]"))
+    pd.nodes <- model$expandNodeNames(paste("pd[",g,",",i,",1:",J.mark,"]"))
+    lam.nodes <- model$expandNodeNames(paste("lam[",g,",",i,",1:",J.sight,"]"))
+    lam.mnoID.nodes <- model$expandNodeNames(paste("lam.mnoID[",g,",1:",J.sight,"]"))
+    lam.um.nodes <- model$expandNodeNames(paste("lam.um[",g,",1:",J.sight,"]"))
+    lam.unk.nodes <- model$expandNodeNames(paste("lam.unk[",g,",1:",J.sight,"]"))
+    y.mark.nodes <- model$expandNodeNames(paste("y.mark[",g,",",i,",1:",J.mark,"]"))
+    y.mID.nodes <- model$expandNodeNames(paste("y.mID[",g,",",i,",1:",J.sight,"]"))
+    y.mnoID.nodes <- model$expandNodeNames(paste("y.mnoID[",g,",1:",J.sight,"]"))
+    y.um.nodes <- model$expandNodeNames(paste("y.um[",g,",1:",J.sight,"]"))
+    y.unk.nodes <- model$expandNodeNames(paste("y.unk[",g,",1:",J.sight,"]"))
     # calcNodesNoSelf <- model$getDependencies(target, self = FALSE)
     # isStochCalcNodesNoSelf <- model$isStoch(calcNodesNoSelf)   ## should be made faster
     # calcNodesNoSelfDeterm <- calcNodesNoSelf[!isStochCalcNodesNoSelf]
@@ -64,27 +66,27 @@ sSampler <- nimbleFunction(
     if(scale < 0)                    stop('cannot use RW sampler with scale control parameter less than 0')
   },
   run = function() {
-    z <- model$z[i]
+    z <- model$z[g,i]
     if(z==0){ #propose from prior
-      # #propose new cell
-      model$s.cell[i] <<- rcat(1,model$pi.cell)
+      #propose new cell
+      model$s.cell[g,i] <<- rcat(1,model$pi.cell[g,1:n.cells])
       #propose x and y in new cell
-      s.cell.x <- model$s.cell[i]%%n.cells.x
-      s.cell.y <- floor(model$s.cell[i]/n.cells.x)+1
+      s.cell.x <- model$s.cell[g,i]%%n.cells.x 
+      s.cell.y <- floor(model$s.cell[g,i]/n.cells.x)+1
       if(s.cell.x==0){
         s.cell.x <- n.cells.x
         s.cell.y <- s.cell.y-1
       }
       xlim.cell <- c(s.cell.x-1,s.cell.x)*res
       ylim.cell <- c(s.cell.y-1,s.cell.y)*res
-      model$s[i,1:2] <<- c(runif(1, xlim.cell[1], xlim.cell[2]), runif(1, ylim.cell[1], ylim.cell[2]))
+      model$s[g,i,1:2] <<- c(runif(1, xlim.cell[1], xlim.cell[2]), runif(1, ylim.cell[1], ylim.cell[2]))
       model$calculate(s.nodes)
       copy(from = model, to = mvSaved, row = 1, nodes = s.nodes, logProb = TRUE)
-    }else{ #MH
-      s.cand <- c(rnorm(1,model$s[i,1],scale), rnorm(1,model$s[i,2],scale))
+    }else{#MH
+      s.cand <- c(rnorm(1,model$s[g,i,1],scale), rnorm(1,model$s[g,i,2],scale))
       inbox <- s.cand[1]< xlim[2] & s.cand[1]> xlim[1] & s.cand[2] < ylim[2] & s.cand[2] > ylim[1]
       if(inbox){
-        #get initial logprobs
+        #get initial logprobs - not optimizing by considering if this is marked or unmarked i
         lp_initial_s <- model$getLogProb(s.nodes)
         lp_initial_y.mark <- model$getLogProb(y.mark.nodes)
         lp_initial_y.unk <- model$getLogProb(y.unk.nodes)
@@ -92,18 +94,18 @@ sSampler <- nimbleFunction(
           lp_initial_y.mID <- model$getLogProb(y.mID.nodes)
           lp_initial_y.mnoID <- model$getLogProb(y.mnoID.nodes)
           #pull this out of model object
-          bigLam.marked.initial <- model$bigLam.marked
+          bigLam.marked.initial <- model$bigLam.marked[g,1:J.sight]
           #update proposed s
-          model$s[i, 1:2] <<- s.cand
+          model$s[g,i,1:2] <<- s.cand
           lp_proposed_s <- model$calculate(s.nodes) #proposed logprob for s.nodes
           model$calculate(pd.nodes) #update pd nodes
           #subtract these out before calculating lam
-          bigLam.marked.proposed <- bigLam.marked.initial - model$lam[i,]
+          bigLam.marked.proposed <- bigLam.marked.initial - model$lam[g,i,1:J.sight]
           model$calculate(lam.nodes) #update lam nodes
           #add these in after calculating lam
-          bigLam.marked.proposed <- bigLam.marked.proposed + model$lam[i,]
+          bigLam.marked.proposed <- bigLam.marked.proposed + model$lam[g,i,1:J.sight]
           #put bigLam in model object
-          model$bigLam.marked <<- bigLam.marked.proposed
+          model$bigLam.marked[g,1:J.sight] <<- bigLam.marked.proposed
           model$calculate(lam.mnoID.nodes) #update after bigLam
           model$calculate(lam.unk.nodes) #update after bigLam
           lp_proposed_y.mark <- model$calculate(y.mark.nodes)
@@ -115,18 +117,18 @@ sSampler <- nimbleFunction(
         }else{ #else unmarked
           lp_initial_y.um <- model$getLogProb(y.um.nodes)
           #pull this out of model object
-          bigLam.unmarked.initial <- model$bigLam.unmarked
+          bigLam.unmarked.initial <- model$bigLam.unmarked[g,1:J.sight]
           #update proposed s
-          model$s[i, 1:2] <<- s.cand
+          model$s[g,i, 1:2] <<- s.cand
           lp_proposed_s <- model$calculate(s.nodes) #proposed logprob for s.nodes
           model$calculate(pd.nodes) #update pd nodes
           #subtract these out before calculating lam
-          bigLam.unmarked.proposed <- bigLam.unmarked.initial - model$lam[i,]
+          bigLam.unmarked.proposed <- bigLam.unmarked.initial - model$lam[g,i,1:J.sight]
           model$calculate(lam.nodes) #update lam nodes
           #add these in after calculating lam
-          bigLam.unmarked.proposed <- bigLam.unmarked.proposed + model$lam[i,]
+          bigLam.unmarked.proposed <- bigLam.unmarked.proposed + model$lam[g,i,1:J.sight]
           #put bigLam in model object
-          model$bigLam.unmarked <<- bigLam.unmarked.proposed
+          model$bigLam.unmarked[g,1:J.sight] <<- bigLam.unmarked.proposed
           model$calculate(lam.um.nodes) #update after bigLam
           model$calculate(lam.unk.nodes) #update after bigLam
           lp_proposed_y.mark <- model$calculate(y.mark.nodes)

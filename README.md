@@ -17,8 +17,8 @@ There are 4 types of models:
 4) generalized SMR (gSMR) with known number of marked individuals. This includes a marking process to account for different spatial distributions of marked and unmarked individuals (Whittington et al. 2018):
 https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
-There are single and multisession versions of each model/sampler except generalized SMR currently, 
-which only has single session. Could add multisession gSMR and single and multisession gSMR with interspersed marking and sighting.
+There are single and multisession versions of each model/sampler.
+Could add single and multisession gSMR with interspersed marking and sighting.
 
 SMR models that allow observation models other than Poisson can be found here:
 
