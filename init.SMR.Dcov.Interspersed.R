@@ -38,7 +38,7 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
       #add marked no ID
       prob <- lamd[1:n.marked,j]*marked.status[,k]
       prob <- prob/sum(prob)
-      if(y.full[1:n.marked,j,k]>0){
+      if(sum(y.full[1:n.marked,j,k]>0)){
         y.full[1:n.marked,j,k] <- y.full[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
       }
       #add unmarked
