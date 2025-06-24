@@ -38,7 +38,9 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
       #add marked no ID
       prob <- lamd[1:n.marked,j]*marked.status[,k]
       prob <- prob/sum(prob)
-      y.full[1:n.marked,j,k] <- y.full[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
+      if(y.full[1:n.marked,j,k]>0){
+        y.full[1:n.marked,j,k] <- y.full[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
+      }
       #add unmarked
       prob <- c(lamd[1:n.marked,j]*(1-marked.status[,k]),lamd[(n.marked+1):M])
       prob <- prob/sum(prob)
@@ -136,7 +138,11 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
   if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked with ID observations.")
   #marked no ID obs
   logProb <- matrix(0,J,K)
-  lamd.mnoID <- colSums(lamd[1:n.marked,])
+  if(n.marked>1){
+    lamd.mnoID <- colSums(lamd[1:n.marked,])
+  }else{
+    lamd.mnoID <- lamd[n.marked,]
+  }
   for(j in 1:J){
     logProb[j,] <- dpois(y.mnoID[j,],lamd.mnoID[j]*data$K2D[j,]*inits$theta.marked[2])
   }

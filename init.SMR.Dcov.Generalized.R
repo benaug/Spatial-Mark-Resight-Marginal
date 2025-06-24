@@ -156,7 +156,12 @@ init.SMR.Dcov.Generalized <- function(data,inits=NA,M=NA){
   if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked with ID observations.")
   #marked no ID obs
   logProb <- rep(0,J.sight)
-  lamd.mnoID <- colSums(lamd[1:n.marked,])
+  if(n.marked>1){
+    lamd.mnoID <- colSums(lamd[1:n.marked,])
+  }else{
+    lamd.mnoID <- lamd[n.marked,]
+  }
+  
   for(j in 1:J.sight){
     logProb[j] <- dpois(y.mnoID[j],lamd.mnoID[j]*K1D.sight[j])
   }

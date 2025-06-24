@@ -24,10 +24,11 @@ init.SMR.multisession.Dcov <- function(data,inits=NA,M=NA){
     }else{
       if(n.marked[g]>1){
         tlocs.sess.max[g] <- max(rowSums(!is.na(init.session[[g]]$locs[1:n.marked[g],,1])))
+        locs.use[[g]] <- init.session[[g]]$locs[1:n.marked[g],1:tlocs.sess.max[g],1:2]
       }else{
         tlocs.sess.max[g] <- sum(!is.na(init.session[[g]]$locs[1:n.marked[g],,1]))
+        locs.use[[g]] <- array(init.session[[g]]$locs[1,1:tlocs.sess.max[g],1:2],dim=dim(init.session[[g]]$locs))
       }
-      locs.use[[g]] <- init.session[[g]]$locs[1:n.marked[g],1:tlocs.sess.max[g],1:2]
       anyTelemetry <- TRUE
     }
   }
