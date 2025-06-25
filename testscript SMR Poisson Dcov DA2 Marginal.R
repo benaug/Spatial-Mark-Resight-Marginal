@@ -28,7 +28,7 @@ nimbleOptions(determinePredictiveNodesInModel = FALSE)
 # nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
 
 ####Simulate some data####
-n.marked <- 20 #for "premarked", this is the number marked. for "natural", this is the number of captured individuals that are identifiable
+n.marked <- 20 #total number marked
 lam0 <- 0.5
 sigma <- 0.5
 K <- 10 #number of occasions

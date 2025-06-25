@@ -24,7 +24,7 @@ cols2 <- brewer.pal(9,"YlOrBr")
 #Here, I'll simulate 3 populations with different n.marked, K, X, and state space areas
 #sharing lam0, sigma so they can be shared during estimation
 N.session <- 3
-n.marked <- c(20,21,22)
+n.marked <- c(20,21,22) #total number marked per session
 lam0 <- rep(0.5,N.session)
 sigma <- rep(0.5,N.session)
 K <- c(10,11,9) #number of occasions
