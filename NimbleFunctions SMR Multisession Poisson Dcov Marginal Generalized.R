@@ -155,7 +155,7 @@ zSampler <- nimbleFunction(
           pick <- z.on[pick]
           
           #prereject turning off any marked individuals or if there is a single unmarked individual
-          if(model$N[g]==(n.marked+1)){
+          if(model$N[1]==(n.marked+1)|pick<=n.marked){
             reject <- TRUE
           }
           if(!reject){
