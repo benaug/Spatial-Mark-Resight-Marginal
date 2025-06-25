@@ -10,7 +10,7 @@ All samplers allow all latent ID observation types: marked without ID, unmarked,
 
 All samplers allow density covariates and a habitat mask, but density covariates can be excluded.
 
-There are 4 types of models: 
+There are 5 types of models: 
 1) known number of marked individuals
 2) known number of marked individuals with interspersed marking and sighting
 3) unknown number of marked individuals (for natural marks or premarked scenario when you no longer know number of marked inds in population)
@@ -19,7 +19,7 @@ There are 4 types of models:
 https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
 There are single and multisession versions of each model/sampler.
-Could add multisession gSMR with interspersed marking and sighting.
+Need to add multisession gSMR with interspersed marking and sighting. 
 
 SMR models that allow observation models other than Poisson can be found here:
 
