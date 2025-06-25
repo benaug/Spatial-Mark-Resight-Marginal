@@ -26,9 +26,9 @@ GetDetectionRate <- nimbleFunction(
     returnType(double(1))
     if(z==0) return(rep(0,J))
     if(z==1){
-     d2 <- ((s[1]-X[1:J,1])^2 + (s[2]-X[1:J,2])^2)
-     ans <- lam0*exp(-d2/(2*sigma^2))
-     return(ans)
+      d2 <- ((s[1]-X[1:J,1])^2 + (s[2]-X[1:J,2])^2)
+      ans <- lam0*exp(-d2/(2*sigma^2))
+      return(ans)
     }
   }
 )
@@ -98,35 +98,33 @@ zSampler <- nimbleFunction(
         reject <- FALSE #we auto reject if you select a detected individual
         #find all z's currently on *excluding marked individuals*
         z.on <- which(model$z[(n.marked+1):M]==1) + n.marked
-        #find all z's currently on *including marked individuals*
-        # z.on <- which(model$z[1:M]==1)
         n.z.on <- length(z.on)
         if(n.z.on>0){ #skip if no unmarked z's to turn off, otherwise nimble will crash
           pick <- rcat(1,rep(1/n.z.on,n.z.on)) #select one of these individuals
           pick <- z.on[pick]
           
           #prereject turning off all unmarked individuals
-          if(model$N[1]==(n.marked+1)|pick<=n.marked){ #is this the last unmarked individual?
+          if(model$N[1]==(n.marked+1)){ #is this the last unmarked individual?
             reject <- TRUE
           }
           if(!reject){
             #get initial logprobs for N and y
             lp.initial.N <- model$getLogProb(N.node)
             lp.initial.y.all <- model$getLogProb(y.all.nodes)
-
+            
             #propose new N/z
             model$N[1] <<-  model$N[1] - 1
             model$z[pick] <<- 0
-
+            
             #turn off
             bigLam.all.proposed <- bigLam.all.initial - model$lam[pick,] #subtract these out before calculate
             model$calculate(lam.nodes[pick])
             model$bigLam.all <<- bigLam.all.proposed
-
+            
             #get proposed logprobs for N and y
             lp.proposed.N <- model$calculate(N.node)
             lp.proposed.y.all <- model$calculate(y.all.nodes)
-  
+            
             #MH step
             log_MH_ratio <- (lp.proposed.N + lp.proposed.y.all) - (lp.initial.N + lp.initial.y.all)
             accept <- decide(log_MH_ratio)
@@ -148,7 +146,7 @@ zSampler <- nimbleFunction(
         }
       }else{#add
         if(model$N[1] < M){ #cannot update if z maxed out. Need to raise M
-
+          
           #find all z's currently off
           z.off <- which(model$z[1:M]==0)
           n.z.off <- length(z.off)
@@ -162,16 +160,16 @@ zSampler <- nimbleFunction(
           #propose new N/z
           model$N[1] <<-  model$N[1] + 1
           model$z[pick] <<- 1
-
+          
           #turn on
           model$calculate(lam.nodes[pick])
           bigLam.all.proposed <- bigLam.all.initial + model$lam[pick,] #add these in after calculate
           model$bigLam.all <<- bigLam.all.proposed
-
+          
           #get proposed logprobs for N and y
           lp.proposed.N <- model$calculate(N.node)
           lp.proposed.y.all <- model$calculate(y.all.nodes)
-
+          
           #MH step
           log_MH_ratio <- (lp.proposed.N + lp.proposed.y.all) - (lp.initial.N + lp.initial.y.all)
           accept <- decide(log_MH_ratio)
