@@ -160,10 +160,6 @@ n.marked <- sapply(data,function(x){x$n.marked})
 #Need some inits to initialize data
 #Use reasonable inits for lam0 and sigma since we check to make sure initial observation
 #model likelihood is finite
-#provide inits for theta.marked and theta.unmarked to initialize data. Assuming all sessions the same
-#each must sum to 1
-theta.marked.init <- c(0.5,0.25,0.25)
-theta.unmarked.init <- c(0,0.75,0.25) #first cell for theta.unmarked.init should be 0
 
 inits <- list(lam0=rep(1,N.session),sigma=rep(1,N.session)) #initializing with 1 parameter per session, just set all to same value
 
