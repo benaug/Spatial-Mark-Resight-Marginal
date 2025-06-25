@@ -151,16 +151,16 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
   logProb <- matrix(0,J,K)
   lamd.um <- colSums(lamd[(n.marked+1):M,])
   for(j in 1:J){
-    logProb[j,] <- dpois(y.mnoID[j,],lamd.mnoID[j]*data$K2D[j,]*inits$theta.unmarked[2])
+    logProb[j,] <- dpois(y.um[j,],lamd.um[j]*data$K2D[j,]*inits$theta.unmarked[2])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unmarked observations.")
   #unk obs
   logProb <- matrix(0,J,K)
   lamd.unk <- colSums(rbind(lamd[1:n.marked,]*inits$theta.marked[3],lamd[(n.marked+1):M,]*inits$theta.unmarked[3]))
   for(j in 1:J){
-    logProb[j,] <- dpois(y.unk[j,],lamd.mnoID[j]*data$K2D[j,])
+    logProb[j,] <- dpois(y.unk[j,],lamd.unk[j]*data$K2D[j,])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unknown marked status observations.")
   
   return(list(s=s.init,z=z.init,K2D=K2D,
               y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,marked.status=data$marked.status,

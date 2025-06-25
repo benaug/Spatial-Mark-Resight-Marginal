@@ -108,16 +108,16 @@ init.SMR.Dcov.Natural <- function(data,inits=NA,M1=NA,M2=NA){
   logProb <- rep(0,J)
   lamd.um <- colSums(lamd[(M1+1):M.both,])
   for(j in 1:J){
-    logProb[j] <- dpois(y.mnoID[j],lamd.mnoID[j]*data$K1D[j])
+    logProb[j] <- dpois(y.um[j],lamd.um[j]*data$K1D[j])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unmarked observations.")
   #unk obs
   logProb <- rep(0,J)
   lamd.unk <- colSums(lamd[1:M.both,])
   for(j in 1:J){
     logProb[j] <- dpois(y.unk[j],lamd.unk[j]*data$K1D[j])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unknown marked status observations.")
   
   return(list(s=s.init,z=z.init,K1D=K1D,
               y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,xlim=xlim,ylim=ylim))

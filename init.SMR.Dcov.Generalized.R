@@ -161,7 +161,6 @@ init.SMR.Dcov.Generalized <- function(data,inits=NA,M=NA){
   }else{
     lamd.mnoID <- lamd[n.marked,]
   }
-  
   for(j in 1:J.sight){
     logProb[j] <- dpois(y.mnoID[j],lamd.mnoID[j]*K1D.sight[j])
   }
@@ -170,16 +169,16 @@ init.SMR.Dcov.Generalized <- function(data,inits=NA,M=NA){
   logProb <- rep(0,J.sight)
   lamd.um <- colSums(lamd[(n.marked+1):M,])
   for(j in 1:J.sight){
-    logProb[j] <- dpois(y.mnoID[j],lamd.mnoID[j]*K1D.sight[j])
+    logProb[j] <- dpois(y.um[j],lamd.um[j]*K1D.sight[j])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unmarked observations.")
   #unk obs
   logProb <- rep(0,J.sight)
   lamd.unk <- colSums(lamd[1:M,])
   for(j in 1:J.sight){
     logProb[j] <- dpois(y.unk[j],lamd.unk[j]*K1D.sight[j])
   }
-  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Marked no ID observations.")
+  if(!is.finite(sum(logProb)))stop("Starting observation model likelihood not finite. Unknown marked status observations.")
   
   return(list(s=s.init,z=z.init,K1D.mark=K1D.mark,K1D.sight=K1D.sight,
               y.mark=y.mark,y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,
