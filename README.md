@@ -22,6 +22,9 @@ There are 6 types of models:
 5) generalized SMR with known number of marked individuals and interpsersed marking and sighting (Whittington et al. 2018)
 https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
+
+#disclaimer, number 6 below needs more thought. My data simulator didn't lead to different activity center distributions for marked and unmarked individuals. Will see if it still works sharing marked guy z's and s's across marked and combined data and report back.
+
 6) One Stage SMR where the marked individual data is used twice (Whittington et al. 2025). This approach provides a means to account for different spatial distributions of marked and unmarked individuals. Simulations in Whittington et al. show minimal bias and roughly nominal coverage as does the single simulation scenario I ran (only issue was slightly low coverage for lam0, 0.90 instead of 0.95).
 My version here differs from Whittington et al. in that 1) I allow for marked but no ID detections to be included (ignoring these introduces bias), 2) I estimate single activity centers for marked individuals instead of one each for the data with and without individual IDs, 
 and 3) I regard the marked individuals to be included in the population with certainty (Whittington et al. estimates z indicator for marked individuals).
