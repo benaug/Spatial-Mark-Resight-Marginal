@@ -6,7 +6,7 @@ https://link.springer.com/article/10.1007/s13253-023-00598-3
 
 These models use count prior data augmentation: https://github.com/benaug/SCR-Count-Prior-Data-Augmentation
 
-All samplers allow all latent ID observation types: marked without ID, unmarked, unknown marked status.
+All samplers allow all latent ID observation types: marked without ID, unmarked, unknown marked status (except One Stage SMR).
 
 All samplers allow density covariates and a habitat mask, but density covariates can be excluded.
 
