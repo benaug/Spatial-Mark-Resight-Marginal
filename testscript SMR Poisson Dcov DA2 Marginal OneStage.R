@@ -25,8 +25,7 @@ buff <- 2 #state space buffer
 X.mark <- expand.grid(5:9,5:9) #marking process traps
 X.sight <- expand.grid(3:11,3:11) #sighting process traps
 #theta is probability of observing each sample type for marked and unmarked individuals
-#Important! You will get bias in One Stage SMR if there are unknown marked status samples
-#because those samples from marked individuals cannot be used to estimate lam0 from the marked individuals.
+#Important! Unknown marked status samples not accommodated below. Not simulating any here.
 theta.marked <- c(0.75,0.25,0) #P(ID, Marked no ID, unk status). must sum to 1
 theta.unmarked <- 1 #prob known marked status. #P(ID, Marked no ID, unk status)=(0,theta.unmarked,1-theta.unmarked)
 obstype <- "poisson" #for sighting process. can also simulate "negbin", but cannot be fit with marginalized approach
