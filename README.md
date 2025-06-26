@@ -49,7 +49,7 @@ theta.marked[3]=theta.unmarked[3] (these are explicitly defined at top of single
 
 By using the data twice, there is a concern we will get biased estimates and underestimate posterior standard deviations.
 Simulations in Margenau et al. (2022) and Whittington et al. (2025) show minimal bias and roughly nominal coverage when considering only marked with ID and unmarked sample types and no density variation.
-I ran 1 simulation scenario with 25% of marked individual samples being unidentifiable and a density covariate and saw -7% bias in the density covariate beta, but effectively no bias in expected and realized N and other parameters. 
+I ran 1 simulation scenario with 25% of marked individual samples being unidentifiable and a density covariate and saw -6.6% bias in the density covariate beta, but effectively no bias in expected and realized N and other parameters. 
 The CV for the density beta was 53% so this could just be due to limited information in the trap-level counts about spatial density variation compared to data with individual IDs where activity centers can be more precisely estimated.
 It seems obvious that switching to One/Two Stage SMR will reduce statistical power with respect to the density covariate betas because activity center localization is very uncertain. But if you don't have the data
 to model the marking process in gSMR, you will get biased abundance estimates (and I assume density covariate betas) with typical SMR approaches as well.
