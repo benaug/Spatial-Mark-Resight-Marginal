@@ -1,8 +1,9 @@
 #This is an SMR data simulator and MCMC sampler for one-stage SMR, but with simulation that allows
-#all sample types. One-stage has no solution for unknown marked status samples
+#all sample types. I am simulating from the gSMR data simulator and discarding the marking process
+# data.
 
 library(nimble)
-source("sim.SMR.Dcov.R")
+source("sim.SMR.Dcov.Generalized.R")
 source("NimbleModel SMR Poisson Dcov DA2 Marginal OneStage.R")
 source("NimbleFunctions SMR Poisson Dcov DA2 Marginal OneStage.R")
 source("init.SMR.Dcov.OneStage.R")
@@ -15,18 +16,20 @@ nimbleOptions(determinePredictiveNodesInModel = FALSE)
 # nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
 
 ####Simulate some data####
-n.marked <- 20 #total number marked
-lam0 <- 0.25
-sigma <- 0.5
-K <- 10 #number of occasions
+p0 <- 0.15 #marking process p0
+lam0 <- 0.5 #sighting process lam0
+sigma <- 0.5 #shared sigma
+K.mark <- 5 #number of marking occasions
+K.sight <- 10 #number of sighting occasions
 buff <- 2 #state space buffer
-X <- expand.grid(3:11,3:11) #make a trapping array
+X.mark <- expand.grid(5:9,5:9) #marking process traps
+X.sight <- expand.grid(3:11,3:11) #sighting process traps
 #theta is probability of observing each sample type for marked and unmarked individuals
 #Important! You will get bias in One Stage SMR if there are unknown marked status samples
 #because those samples from marked individuals cannot be used to estimate lam0 from the marked individuals.
 theta.marked <- c(0.75,0.25,0) #P(ID, Marked no ID, unk status). must sum to 1
 theta.unmarked <- 1 #prob known marked status. #P(ID, Marked no ID, unk status)=(0,theta.unmarked,1-theta.unmarked)
-obstype <- "poisson" #can also simulate "negbin", but cannot fit with marginalized approach
+obstype <- "poisson" #for sighting process. can also simulate "negbin", but cannot be fit with marginalized approach
 tlocs <- 10 #number of telemetry locs/marked individual.
 
 #get some colors
@@ -36,8 +39,9 @@ cols2 <- brewer.pal(9,"YlOrBr")
 
 ### Habitat Covariate stuff###
 #get x and y extent by buffering state space
-xlim <- range(X[,1]) + c(-buff,buff)
-ylim <- range(X[,2]) + c(-buff,buff)
+X.both <- rbind(X.mark,X.sight)
+xlim <- range(X.both[,1]) + c(-buff,buff)
+ylim <- range(X.both[,2]) + c(-buff,buff)
 #shift X, xlim, ylim, so lower left side of state space is (0,0)
 #this is required to use efficient look-up table to find the cell number
 #of a continuous location
@@ -45,8 +49,13 @@ x.shift <- xlim[1]
 y.shift <- ylim[1]
 xlim <- xlim-x.shift
 ylim <- ylim-y.shift
-X[,1] <- X[,1]-x.shift
-X[,2] <- X[,2]-y.shift
+X.both[,1] <- X.both[,1]-x.shift
+X.both[,2] <- X.both[,2]-y.shift
+X.mark[,1] <- X.mark[,1]-x.shift
+X.mark[,2] <- X.mark[,2]-y.shift
+X.sight[,1] <- X.sight[,1]-x.shift
+X.sight[,2] <- X.sight[,2]-y.shift
+
 
 res <- 0.25 #habitat grid resolution, length of 1 cell side
 cellArea <- res^2 #area of one cell
@@ -66,17 +75,20 @@ D.cov <- grf(n.cells,grid=dSS,cov.pars=c(500,500),messages=FALSE)[[2]] #takes a 
 D.cov <- as.numeric(scale(D.cov)) #scale
 par(mfrow=c(1,1),ask=FALSE)
 image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="D.cov",xlab="X",ylab="Y",col=cols1)
-points(X,pch=4)
+points(X.sight,pch=4,lwd=2)
+points(X.mark,pch=4,col="darkred",lwd=2)
 
 #Additionally, maybe we want to exclude "non-habitat" or limit the state space extent
 #let's use a 3sigma buffer
 dSS.tmp <- dSS - res/2 #convert back to grid locs
 InSS <- rep(0,length(D.cov))
-dists <- e2dist(X,dSS.tmp)
+dists <- e2dist(X.both,dSS.tmp)
 min.dists <- apply(dists,2,min)
 InSS[min.dists<(3*sigma)] <- 1
 image(x.vals,y.vals,matrix(D.cov*InSS,n.cells.x,n.cells.y),main="Habitat",col=cols1)
-points(X,pch=4,col="darkred",lwd=2)
+points(X.sight,pch=4,lwd=2)
+points(X.mark,pch=4,col="darkred",lwd=2)
+
 
 #Density covariates
 D.beta0 <- -0.5 #data simulator uses intercept for marked + unmarked
@@ -86,18 +98,22 @@ lambda.cell <- InSS*exp(D.beta0 + D.beta1*D.cov)*cellArea
 sum(lambda.cell) #expected N in state space
 
 image(x.vals,y.vals,matrix(lambda.cell,n.cells.x,n.cells.y),main="Expected Density",col=cols1)
-points(X,pch=4,cex=1,lwd=2)
+points(X.sight,pch=4,cex=1,lwd=2)
+points(X.mark,pch=4,cex=1,lwd=2,col="darkred")
 
 #Simulate some data
 #setting seed here because I am setting a seed to produce the D.cov and you will simulate the same
 #data set over and over if you don't use different seeds here for each data set you simulate
 set.seed(143532) #change seed for new data set
-data <- sim.SMR.Dcov(D.beta0=D.beta0,D.beta1=D.beta1,res=res,
-                D.cov=D.cov,InSS=InSS,n.marked=n.marked,
-                theta.marked=theta.marked,theta.unmarked=theta.unmarked,
-                lam0=lam0,sigma=sigma,K=K,X=X,xlim=xlim,ylim=ylim,tlocs=tlocs,
-                obstype=obstype)
+data <- sim.SMR.Dcov.Generalized(D.beta0=D.beta0,D.beta1=D.beta1,res=res,
+                                 D.cov=D.cov,InSS=InSS,
+                                 theta.marked=theta.marked,theta.unmarked=theta.unmarked,
+                                 lam0=lam0,p0=p0,sigma=sigma,K.mark=K.mark,K.sight=K.sight,
+                                 X.mark=X.mark,X.sight=X.sight,xlim=xlim,ylim=ylim,tlocs=tlocs,
+                                 obstype=obstype)
 points(data$s,pch=16) #add activity centers
+points(data$s.marked,col="goldenrod",pch=16) #marked individual activity centers
+data$n.marked #number of individuals captured and marked
 
 #What is the observed data?
 str(data$y.mID) #marked with ID detections
@@ -112,6 +128,10 @@ str(data$locs) #possibly telemetry. n.marked x tlocs x 2 array (or ragged array 
 #OK, in One-Stage SMR, we are going to use y.mID, y.mnoID, and y.all, created here:
 data$y.all <- colSums(data$y.mID) + data$y.mnoID + data$y.um + data$y.unk
 str(data$y.all) #vector of length J with all detections
+#renaming some things that come out of the generalized SMR data simulator.
+data$X <- data$X.sight #sighting capture history
+data$K <- data$K.sight #max number of sighting occasions across traps
+data$K1D <- data$K1D.sight #sighting trap operation
 
 #function to test for errors in mask set up. 
 mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.cells.x,
@@ -142,7 +162,8 @@ points(nimbuild$s,pch=16) #initialized activity centers
 D0.init <- (sum(nimbuild$z))/(sum(data$InSS)*data$res^2)
 
 #must initialize N.M and N.UM to be consistent with z. speeds converge to set consistent with lambda.N.M/UM
-Niminits <- list(z=nimbuild$z,s=nimbuild$s,D0=D0.init,D.beta1=0,
+Niminits <- list(s.m=nimbuild$s[1:n.marked,],
+                 z=nimbuild$z,s=nimbuild$s,D0=D0.init,D.beta1=0,
                  N=sum(nimbuild$z),lam0=inits$lam0,sigma=inits$sigma)
 
 dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the values are
@@ -156,6 +177,7 @@ dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the valu
 #                 y.mnoID=nimbuild$y.mnoID, #marked without ID
 #                 y.all=nimbuild$y.all, #all detections
 #                 X=as.matrix(X),
+#                 z.m=rep(1,n.marked), #fix z's for marked individuals for marked only data
 #                 dummy.data=dummy.data,cells=data$cells,InSS=data$InSS)
 
 #If you have telemetry use these instead. Make sure to uncomment telemetry BUGS code.
@@ -167,6 +189,7 @@ constants <- list(n.marked=n.marked,M=M,J=J,K1D=data$K1D,
 Nimdata <- list(y.mID=nimbuild$y.mID, #marked with ID
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
                 y.all=nimbuild$y.all, #all detections
+                z.m=rep(1,n.marked), #fix z's for marked individuals for marked only data
                 dummy.data=dummy.data,cells=data$cells,InSS=data$InSS,
                 X=as.matrix(X),locs=data$locs)
 
@@ -199,29 +222,37 @@ conf$addSampler(target = paste("N"),
                                                  z.nodes=z.nodes,calcNodes=calcNodes),
                 silent = TRUE)
 
-#add sSampler
+#add sSamplers
+#1) marked individuals
 # if no telemetry,
 # for(i in 1:M){
-#   conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-#                   type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-#                                                  xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-#                                                  n.marked=n.marked,n.locs.ind=0,
+#   conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
+#                   type = 'sSampler',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+#                                                  n.locs.ind=0,
 #                                                  scale=0.25),silent = TRUE)
 #   #scale parameter here is just the starting scale. It will be tuned.
 # }
 #with telemetry (make sure you turn it on in model code),
-for(i in 1:M){
+for(i in 1:n.marked){
   if(i %in% nimbuild$tel.inds){#inds with telemetry
-    conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-                    type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-                                                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,n.locs.ind=nimbuild$n.locs.ind[i],
-                                                   n.marked=n.marked,scale=0.25),silent = TRUE)
+    conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
+                    type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+                                                         n.locs.ind=nimbuild$n.locs.ind[i],
+                                                         scale=0.25),silent = TRUE)
   }else{ #inds with no telemetry
-    conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-                    type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-                                                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,n.locs.ind=0,
-                                                   n.marked=n.marked,scale=0.25),silent = TRUE)
+    conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
+                    type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+                                                         n.locs.ind=0,n.marked=n.marked,
+                                                         scale=0.25),silent = TRUE)
   }
+}
+#2) all individuals
+for(i in 1:M){
+  conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
+                  type = 'sSamplerAll',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
+                                                 xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+                                                 scale=0.25),silent = TRUE)
+  #scale parameter here is just the starting scale. It will be tuned.
 }
 
 #can add block sampler if lam0, sigma, and/or lambda.N posteriors highly correlated
@@ -232,20 +263,18 @@ conf$addSampler(target = c("lam0","sigma"),type = 'RW_block',
 conf$addSampler(target = c("D0","D.beta1"),
                 type = 'AF_slice',control=list(adaptive=TRUE),silent = TRUE)
 
-
-# Build and compile
+#Build and compile
 Rmcmc <- buildMCMC(conf)
-# runMCMC(Rmcmc,niter=1) #this will run in R, used for better debugging
+#runMCMC(Rmcmc,niter=1) #this will run in R, used for better debugging
 Cmodel <- compileNimble(Rmodel)
 Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
-# Run the model.
+#Run the model.
 start.time2 <- Sys.time()
 Cmcmc$run(2500,reset=FALSE) #short run for demonstration. can keep running this line to get more samples
 end.time <- Sys.time()
 end.time-start.time  # total time for compilation, replacing samplers, and fitting
 end.time-start.time2 # post-compilation run time
-
 
 library(coda)
 mvSamples <- as.matrix(Cmcmc$mvSamples)

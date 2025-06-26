@@ -11,6 +11,7 @@ All samplers allow all latent ID observation types: marked without ID, unmarked,
 All samplers allow density covariates and a habitat mask, but density covariates can be excluded.
 
 There are 6 types of models: 
+
 1) known number of marked individuals
 
 2) known number of marked individuals with interspersed marking and sighting
@@ -23,13 +24,30 @@ There are 6 types of models:
 https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
 
-#disclaimer, number 6 below needs more thought. My data simulator didn't lead to different activity center distributions for marked and unmarked individuals. Will see if it still works sharing marked guy z's and s's across marked and combined data and report back.
+6) One Stage SMR where the marked individual data is used twice (Whittington et al. 2025): 
 
-6) One Stage SMR where the marked individual data is used twice (Whittington et al. 2025). This approach provides a means to account for different spatial distributions of marked and unmarked individuals. Simulations in Whittington et al. show minimal bias and roughly nominal coverage as does the single simulation scenario I ran (only issue was slightly low coverage for lam0, 0.90 instead of 0.95).
-My version here differs from Whittington et al. in that 1) I allow for marked but no ID detections to be included (ignoring these introduces bias), 2) I estimate single activity centers for marked individuals instead of one each for the data with and without individual IDs, 
-and 3) I regard the marked individuals to be included in the population with certainty (Whittington et al. estimates z indicator for marked individuals).
-Note, unknown marked status samples that came from marked individuals cannot be accounted for and if you have these, to my knowledge, there is no way to correct the bias introduced using One or Two Stage approaches.
 https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.70246
+
+This approach provides a means to account for different spatial distributions of marked and unmarked individuals without having to model the marking process (gSMR).
+It is a modification of the Two Stage approach of Margenau et al. (2022) that does both stages at once:
+
+https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/eap.2553
+
+My version here differs from Whittington et al. (2025) in that I allow for marked but no ID detections to be included. Margenau et al. (2022) say 
+"In the instance a marked individual cannot be reliably recognized in camera photographs, perhaps due to body positioning, vegetation obstruction, or blurriness, the data record should be discarded from stage one of the model but included as a record in stage two."
+, but this suggestion will introduce bias, whether they are talking about marked with no ID or unknown marked status individuals (I can't tell 100%). 
+One and Two Stage approaches require a solution for unknown marked status samples if they occur. 
+In the specific case where marked and unmarked individuals' detections are equally likely to be unknown mark status events, you can use
+One and Two Stage approaches without introducing bias by removing these samples from *both stages* of the analysis. More concretely, I mean when
+theta.marked[3]=theta.unmarked[3]. Otherwise, bias will be introduced by not considering these samples, but we have no way to include them with this approach.
+
+By using the data twice, there is a concern we will get biased estimates and underestimate posterior standard deviations.
+Simulations in Margenau et al. (2022) and Whittington et al. (2025) show minimal bias and roughly nominal coverage when considering only marked with ID and unmarked sample types and no density variation.
+I ran 1 simulation scenario with 25% of marked individual samples being unidentifiable and a density covariate and saw -7% bias in the density covariate beta, but effectively no bias in expected and realized N and other parameters. 
+The CV for the density beta was 53% so this could just be due to limited information in the trap-level counts about spatial density variation compared to data with individual IDs where activity centers can be more precisely estimated.
+It seems obvious that switching to One/Two Stage SMR will reduce statistical power with respect to the density covariate betas because activity center localization is very uncertain. But if you don't have the data
+to model the marking process in gSMR, you will get biased abundance estimates (and I assume density covariate betas) with typical SMR approaches as well.
+
 
 There are single and multisession versions of each model/sampler.
 Need to add multisession gSMR with interspersed marking and sighting and One Stage. 

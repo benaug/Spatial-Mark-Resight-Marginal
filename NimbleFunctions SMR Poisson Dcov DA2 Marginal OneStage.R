@@ -96,15 +96,15 @@ zSampler <- nimbleFunction(
       updown <- rbinom(1,1,0.5) #p=0.5 is symmetric. If you change this, must account for asymmetric proposal
       if(updown==0){#subtract
         reject <- FALSE #we auto reject if you select a detected individual
-        #find all z's currently on *excluding marked individuals*
-        z.on <- which(model$z[(n.marked+1):M]==1) + n.marked
+        #find all z's currently on *including marked individuals*
+        z.on <- which(model$z[1:M]==1)
         n.z.on <- length(z.on)
         if(n.z.on>0){ #skip if no unmarked z's to turn off, otherwise nimble will crash
           pick <- rcat(1,rep(1/n.z.on,n.z.on)) #select one of these individuals
           pick <- z.on[pick]
           
-          #prereject turning off all unmarked individuals
-          if(model$N[1]==(n.marked+1)){ #is this the last unmarked individual?
+          #prereject turning off last individual
+          if(model$N[1]==1){ #is this the last individual?
             reject <- TRUE
           }
           if(!reject){
