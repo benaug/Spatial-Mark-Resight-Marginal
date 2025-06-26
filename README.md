@@ -17,7 +17,7 @@ There are 6 types of models:
 https://www.jstor.org/stable/23566419
 https://esajournals.onlinelibrary.wiley.com/doi/full/10.1890/12-1256.1
 
-2) known number of marked individuals with interspersed marking and sighting (Whittington et al. 2018)
+2) known number of marked individuals with interspersed marking and sighting (Whittington et al. 2018 with no marking process)
 
 https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
