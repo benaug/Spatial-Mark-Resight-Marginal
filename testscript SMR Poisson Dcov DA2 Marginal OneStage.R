@@ -216,8 +216,7 @@ N.node <- Rmodel$expandNodeNames("N")
 z.nodes <- Rmodel$expandNodeNames("z")
 calcNodes <- c(N.node,lam.nodes,bigLam.all.nodes,y.all.nodes)
 conf$addSampler(target = paste("N"),
-                type = 'zSampler',control = list(z.ups=z.ups,J=J,
-                                                 n.marked=n.marked,M=M,N.node=N.node,
+                type = 'zSampler',control = list(z.ups=z.ups,J=J,M=M,N.node=N.node,
                                                  lam.nodes=lam.nodes,y.all.nodes=y.all.nodes,
                                                  z.nodes=z.nodes,calcNodes=calcNodes),
                 silent = TRUE)
@@ -227,9 +226,9 @@ conf$addSampler(target = paste("N"),
 # if no telemetry,
 # for(i in 1:M){
 #   conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
-#                   type = 'sSampler',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+#                   type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
 #                                                  n.locs.ind=0,
-#                                                  scale=0.25),silent = TRUE)
+#                                                  scale=1),silent = TRUE)
 #   #scale parameter here is just the starting scale. It will be tuned.
 # }
 #with telemetry (make sure you turn it on in model code),
@@ -238,12 +237,12 @@ for(i in 1:n.marked){
     conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
                     type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
                                                          n.locs.ind=nimbuild$n.locs.ind[i],
-                                                         scale=0.25),silent = TRUE)
+                                                         scale=1),silent = TRUE)
   }else{ #inds with no telemetry
     conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
                     type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
                                                          n.locs.ind=0,n.marked=n.marked,
-                                                         scale=0.25),silent = TRUE)
+                                                         scale=1),silent = TRUE)
   }
 }
 #2) all individuals
@@ -251,7 +250,7 @@ for(i in 1:M){
   conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
                   type = 'sSamplerAll',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
                                                  xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-                                                 scale=0.25),silent = TRUE)
+                                                 scale=1),silent = TRUE)
   #scale parameter here is just the starting scale. It will be tuned.
 }
 

@@ -80,7 +80,6 @@ zSampler <- nimbleFunction(
   contains = sampler_BASE,
   setup = function(model, mvSaved, target, control) {
     J <- control$J
-    n.marked <- control$n.marked
     M <- control$M
     z.ups <- control$z.ups
     y.all.nodes <- control$y.all.nodes
