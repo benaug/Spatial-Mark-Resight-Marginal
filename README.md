@@ -12,17 +12,23 @@ All samplers allow density covariates and a habitat mask, but density covariates
 
 There are 6 types of models: 
 
-1) known number of marked individuals
+1) known number of marked individuals (Chandler and Royle 2013, Sollmann et al. 2013)
 
-2) known number of marked individuals with interspersed marking and sighting
+https://www.jstor.org/stable/23566419
+https://esajournals.onlinelibrary.wiley.com/doi/full/10.1890/12-1256.1
+
+2) known number of marked individuals with interspersed marking and sighting (Whittington et al. 2018)
+
+https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
 3) unknown number of marked individuals (for natural marks or premarked scenario when you no longer know number of marked inds in population)
+(Rich et al. 2014)
+
+https://academic.oup.com/jmammal/article/95/2/382/866592
 
 4) generalized SMR (gSMR) with known number of marked individuals. This includes a marking process to account for different spatial distributions of marked and unmarked individuals (Whittington et al. 2018):
 
-5) generalized SMR with known number of marked individuals and interpsersed marking and sighting (Whittington et al. 2018)
-https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
-
+5) generalized SMR with known number of marked individuals and interspersed marking and sighting (Whittington et al. 2018)
 
 6) One Stage SMR where the marked individual data is used twice (Whittington et al. 2025): 
 
@@ -39,7 +45,7 @@ My version here differs from Whittington et al. (2025) in that I allow for marke
 One and Two Stage approaches require a solution for unknown marked status samples if they occur. 
 In the specific case where marked and unmarked individuals' detections are equally likely to be unknown mark status events, you can use
 One and Two Stage approaches without introducing bias by removing these samples from *both stages* of the analysis. More concretely, I mean when
-theta.marked[3]=theta.unmarked[3]. Otherwise, bias will be introduced by not considering these samples, but we have no way to include them with this approach.
+theta.marked[3]=theta.unmarked[3] (these are explicitly defined at top of single session test scripts). Otherwise, bias will be introduced by not considering these samples, but we have no way to include them with this approach.
 
 By using the data twice, there is a concern we will get biased estimates and underestimate posterior standard deviations.
 Simulations in Margenau et al. (2022) and Whittington et al. (2025) show minimal bias and roughly nominal coverage when considering only marked with ID and unmarked sample types and no density variation.
