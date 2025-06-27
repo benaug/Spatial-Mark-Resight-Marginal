@@ -49,7 +49,7 @@ tlocs <- 10 #number of telemetry locs/marked individual.
 # a character vector of length K.mark+K.sight specifying the order of the marking and sighting occasions.
 #Vector elements are either "M" or "S" arranged in the order the marking and sighting occasions occurred.
 #there must be K.mark M's and K.sight S's. Data simulator will check these requirements.
-K.order=c("S","M","S","M","S","M","S","M","S","M","S","S","S","S","S")
+K.order <- c("S","M","S","M","S","M","S","M","S","M","S","S","S","S","S")
 
 #get some colors
 library(RColorBrewer)
