@@ -120,9 +120,12 @@ sim.SMR.Dcov.Generalized.Interspersed <-
     #get marked individuals
     cap.idx <- which(rowSums(y.mark)>0)
     if(length(cap.idx)==0)stop("Simulated 0 marked individuals.")
-    
     y.mark <- y.mark[cap.idx,,] #marking process history
     n.marked <- length(cap.idx) #number of marked individuals
+    if(n.marked==1){
+      y.mark <- array(y.mark,dim=c(1,J.mark,J.sight))
+    }
+    
     #rearrange sighting history to put marked individuals at the top for code below to work correctly
     umguys <- setdiff(1:N,cap.idx) 
     y <- abind(y[cap.idx,,],y[umguys,,],along=1)
