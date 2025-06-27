@@ -44,7 +44,7 @@ NimModel <- nimbleCode({
     #also disallowing s's in non-habitat
     dummy.data[i] ~ dCell(pi.cell[s.cell[i]],InSS=InSS[s.cell[i]])
     lam[i,1:J] <- GetDetectionRate(s = s[i,1:2], X = X[1:J,1:2], J=J,sigma=sigma, lam0=lam0, z=z[i])
-  }#custom Metropolis-Hastings update for N.M/z[1:n.marked] 
+  }#custom Metropolis-Hastings update for N/z
   bigLam.all[1:J] <- GetbigLam(lam=lam[1:M,1:J],z=z[1:M])
   y.all[1:J] ~ dPoissonVector(bigLam.all[1:J]*K1D[1:J],z=1) #plug in z=1 to reuse dPoissonVector
   

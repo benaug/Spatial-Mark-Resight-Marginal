@@ -124,8 +124,10 @@ str(data$locs) #possibly telemetry. n.marked x tlocs x 2 array (or ragged array 
 #individual, fill in NAs for inds with no telemetry and/or inds without max number of telemetry points.
 #in latter case, order telemetry points first, then NAs
 
-#OK, in One-Stage SMR, we are going to use y.mID, y.mnoID, and y.all, created here:
-data$y.all <- colSums(data$y.mID) + data$y.mnoID + data$y.um + data$y.unk
+#OK, in One-Stage SMR, we are going to use y.mID, y.mnoID, and y.all, created here.
+#Note, given theta.marked[3]=theta.unmarked[3]=0, no unknown marked status samples are simulated
+#you can test how these samples bias estimates if included by simulating them and adding them to y.all here.
+data$y.all <- colSums(data$y.mID) + data$y.mnoID + data$y.um # + data$y.unk
 str(data$y.all) #vector of length J with all detections
 #renaming some things that come out of the generalized SMR data simulator.
 data$X <- data$X.sight #sighting capture history
