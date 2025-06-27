@@ -1,6 +1,3 @@
-#To do: fix z sampler
-
-
 #This is an SMR data simulator and MCMC sampler that handles all sample types
 #1) marked, known ID
 #2) marked, unknown ID
