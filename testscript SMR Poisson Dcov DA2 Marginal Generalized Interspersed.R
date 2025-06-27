@@ -46,7 +46,7 @@ theta.unmarked <- 0.75 #prob known marked status. #P(ID, Marked no ID, unk statu
 obstype <- "poisson" #for sighting process. can also simulate "negbin", but cannot be fit with marginalized approach
 tlocs <- 10 #number of telemetry locs/marked individual.
 
-# a character vector of length K1+K2 specifying the order of the marking and sighting occasions.
+# a character vector of length K.mark+K.sight specifying the order of the marking and sighting occasions.
 #Vector elements are either "M" or "S" arranged in the order the marking and sighting occasions occurred.
 #there must be K.mark M's and K.sight S's. Data simulator will check these requirements.
 K.order=c("S","M","S","M","S","M","S","M","S","M","S","S","S","S","S")
