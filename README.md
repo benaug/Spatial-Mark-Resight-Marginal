@@ -65,3 +65,9 @@ SMR models with categorical partial IDs can be found here:
 https://github.com/benaug/Spatial-Mark-Resight-IDCov
 
 These are both more limited (e.g., no habitat mask, density covariates), but can be modified.
+
+Analogous repositories in the "Marginal Unmarked Trilogy" can be found here:
+
+Unmarked SCR: https://github.com/benaug/Unmarked-SCR-Marginal
+
+SCR with random thinning: https://github.com/benaug/Random-Thin-Marginal
