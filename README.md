@@ -1,5 +1,5 @@
 # Spatial-Mark-Resight-Marginal
-SMR samplers marginalizing out latent individual IDs. Poisson obervation model only. 
+SMR samplers marginalizing out latent individual IDs. Poisson observation model only. 
 To speed up computation, I use the approach of Herliansyah et al. (2024, section 4.3) in the custom N/z and activity center updates.
 
 https://link.springer.com/article/10.1007/s13253-023-00598-3
