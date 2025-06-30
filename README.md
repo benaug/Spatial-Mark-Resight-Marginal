@@ -54,8 +54,7 @@ scenario. I probably needed to use more than 100 data sets for the single sessio
 was. In both, the coverage of lam0 was around 0.90, so perhaps a bit low from using the data twice. Overall, looks good.
 
 There are single and multisession versions of each model/sampler.
-Need to add multisession gSMR with interspersed marking and sighting. 
-
+ 
 SMR models that allow observation models other than Poisson can be found here:
 
 https://github.com/benaug/Spatial-Mark-Resight

@@ -125,7 +125,7 @@ zSampler <- nimbleFunction(
     g <- control$g
     J.mark <- control$J.mark
     J.sight <- control$J.sight
-    K.sight <- control$K.sight #started working on this one accidentally when creating single session. not done, just added this.
+    K.sight <- control$K.sight
     n.marked <- control$n.marked
     M <- control$M
     z.ups <- control$z.ups
@@ -156,7 +156,7 @@ zSampler <- nimbleFunction(
           pick <- z.on[pick]
           
           #prereject turning off any marked individuals or if there is a single unmarked individual
-          if(model$N[g]==(n.marked+1)){
+          if(model$N[g]==(n.marked+1)|pick<=n.marked){
             reject <- TRUE
           }
           if(!reject){
@@ -194,8 +194,8 @@ zSampler <- nimbleFunction(
               mvSaved["pd",1][g,pick,1:J.mark] <<- model[["pd"]][g,pick,1:J.mark]
               mvSaved["lam",1][g,pick,1:J.sight] <<- model[["lam"]][g,pick,1:J.sight]
               mvSaved["bigLam.unmarked",1][g,1:J.sight] <<- model[["bigLam.unmarked"]][g,1:J.sight]
-              mvSaved["lam.um",1][g,1:J.sight] <<- model[["lam.um"]][g,1:J.sight]
-              mvSaved["lam.unk",1][g,1:J.sight] <<- model[["lam.unk"]][g,1:J.sight]
+              mvSaved["lam.um",1][g,1:J.sight,1:K.sight] <<- model[["lam.um"]][g,1:J.sight,1:K.sight]
+              mvSaved["lam.unk",1][g,1:J.sight,1:K.sight] <<- model[["lam.unk"]][g,1:J.sight,1:K.sight]
               bigLam.unmarked.initial <- bigLam.unmarked.proposed
             }else{
               model[["N"]][g] <<- mvSaved["N",1][g]
@@ -203,8 +203,8 @@ zSampler <- nimbleFunction(
               model[["pd"]][g,pick,1:J.mark] <<- mvSaved["pd",1][g,pick,1:J.mark]
               model[["lam"]][g,pick,1:J.sight] <<- mvSaved["lam",1][g,pick,1:J.sight]
               model[["bigLam.unmarked"]][g,1:J.sight] <<- mvSaved["bigLam.unmarked",1][g,1:J.sight]
-              model[["lam.um"]][g,1:J.sight] <<- mvSaved["lam.um",1][g,1:J.sight]
-              model[["lam.unk"]][g,1:J.sight] <<- mvSaved["lam.unk",1][g,1:J.sight]
+              model[["lam.um"]][g,1:J.sight,1:K.sight] <<- mvSaved["lam.um",1][g,1:J.sight,1:K.sight]
+              model[["lam.unk"]][g,1:J.sight,1:K.sight] <<- mvSaved["lam.unk",1][g,1:J.sight,1:K.sight]
               model$calculate(y.mark.nodes[pick])
               model$calculate(y.um.nodes)
               model$calculate(y.unk.nodes)
@@ -255,8 +255,8 @@ zSampler <- nimbleFunction(
             mvSaved["pd",1][g,pick,1:J.mark] <<- model[["pd"]][g,pick,1:J.mark]
             mvSaved["lam",1][g,pick,1:J.sight] <<- model[["lam"]][g,pick,1:J.sight]
             mvSaved["bigLam.unmarked",1][g,1:J.sight] <<- model[["bigLam.unmarked"]][g,1:J.sight]
-            mvSaved["lam.um",1][g,1:J.sight] <<- model[["lam.um"]][g,1:J.sight]
-            mvSaved["lam.unk",1][g,1:J.sight] <<- model[["lam.unk"]][g,1:J.sight]
+            mvSaved["lam.um",1][g,1:J.sight,1:K.sight] <<- model[["lam.um"]][g,1:J.sight,1:K.sight]
+            mvSaved["lam.unk",1][g,1:J.sight,1:K.sight] <<- model[["lam.unk"]][g,1:J.sight,1:K.sight]
             bigLam.unmarked.initial <- bigLam.unmarked.proposed
           }else{
             model[["N"]][g] <<- mvSaved["N",1][g]
@@ -264,8 +264,8 @@ zSampler <- nimbleFunction(
             model[["pd"]][g,pick,1:J.mark] <<- mvSaved["pd",1][g,pick,1:J.mark]
             model[["lam"]][g,pick,1:J.sight] <<- mvSaved["lam",1][g,pick,1:J.sight]
             model[["bigLam.unmarked"]][g,1:J.sight] <<- mvSaved["bigLam.unmarked",1][g,1:J.sight]
-            model[["lam.um"]][g,1:J.sight] <<- mvSaved["lam.um",1][g,1:J.sight]
-            model[["lam.unk"]][g,1:J.sight] <<- mvSaved["lam.unk",1][g,1:J.sight]
+            model[["lam.um"]][g,1:J.sight,1:K.sight] <<- mvSaved["lam.um",1][g,1:J.sight,1:K.sight]
+            model[["lam.unk"]][g,1:J.sight,1:K.sight] <<- mvSaved["lam.unk",1][g,1:J.sight,1:K.sight]
             model$calculate(y.mark.nodes[pick])
             model$calculate(y.um.nodes)
             model$calculate(y.unk.nodes)
