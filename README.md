@@ -26,7 +26,7 @@ https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2664.12954
 
 https://academic.oup.com/jmammal/article/95/2/382/866592
 
-4) generalized SMR (gSMR) with known number of marked individuals. This includes a marking process to account for different spatial distributions of marked and unmarked individuals (Whittington et al. 2018):
+4) generalized SMR (gSMR) with known number of marked individuals. This includes a marking process to account for different spatial distributions of marked and unmarked individuals (Whittington et al. 2018). There is an Mb (marking only) single session version, too.
 
 5) generalized SMR with known number of marked individuals and interspersed marking and sighting (Whittington et al. 2018)
 
