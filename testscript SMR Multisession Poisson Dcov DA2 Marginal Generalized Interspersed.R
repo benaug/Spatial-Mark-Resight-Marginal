@@ -224,7 +224,7 @@ for(g in 1:N.session){
     trapcaps2 <- which(y.mID2D[i,]>0)
     traps <-  rbind(X.mark[[g]][trapcaps1,],X.sight[[g]][trapcaps2,])
     s <- nimbuild$s[g,i,]
-    points(s[1],s[2],col="goldenrod",pch=16,cex=0.5)
+    points(s[1],s[2],col="goldenrod",pch=16)
     if(nrow(traps)>0){
       for(j in 1:nrow(traps)){
         lines(x=c(s[1],traps[j,1]),y=c(s[2],traps[j,2]),col="goldenrod")
