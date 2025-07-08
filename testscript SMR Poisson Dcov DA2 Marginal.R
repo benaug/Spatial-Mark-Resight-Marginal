@@ -142,9 +142,21 @@ inits <- list(lam0=1,sigma=1)
 #This function structures the simulated data to fit the model in Nimble (some more restructing below)
 #Also checks some inits
 nimbuild <- init.SMR.Dcov(data,inits,M=M)
+#plot to check s inits
 image(data$x.vals,data$y.vals,matrix(data$D.cov*data$InSS,data$n.cells.x,data$n.cells.y),main="D.cov",xlab="X",ylab="Y",col=cols1)
 points(X,pch=4)
 points(nimbuild$s,pch=16) #initialized activity centers
+for(i in 1:n.marked){
+  trapcaps <- which(data$y.mID[i,]>0)
+  traps <-  rbind(X[trapcaps,])
+  s <- nimbuild$s[i,]
+  points(s[1],s[2],col="goldenrod",pch=16,cex=0.5)
+  if(nrow(traps)>0){
+    for(j in 1:nrow(traps)){
+      lines(x=c(s[1],traps[j,1]),y=c(s[2],traps[j,2]),col="goldenrod")
+    }
+  }
+}
 
 #inits for nimble
 D0.init <- (sum(nimbuild$z))/(sum(data$InSS)*data$res^2)

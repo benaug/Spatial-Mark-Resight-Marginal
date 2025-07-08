@@ -166,9 +166,22 @@ inits <- list(p0.p=0.1,p0.c=0.1,lam0=1,sigma=1)
 #Also checks some inits
 nimbuild <- init.SMR.Dcov.Generalized.Mb(data,inits,M=M)
 image(data$x.vals,data$y.vals,matrix(data$D.cov*data$InSS,data$n.cells.x,data$n.cells.y),main="D.cov",xlab="X",ylab="Y",col=cols1)
-points(X.both,pch=4,lwd=2)
 points(nimbuild$s,pch=16) #initialized activity centers
-points(nimbuild$s[1:data$n.marked,],pch=16,col="goldenrod") #initialized activity centers
+points(X.sight,pch=4,col="lightblue")
+points(X.mark,pch=4)
+y.mark2D <- apply(data$y.mark,c(1,2),sum)
+for(i in 1:n.marked){
+  trapcaps1 <- which(y.mark2D[i,]>0)
+  trapcaps2 <- which(data$y.mID[i,]>0)
+  traps <-  rbind(X.mark[trapcaps1,],X.sight[trapcaps2,])
+  s <- nimbuild$s[i,]
+  points(s[1],s[2],col="goldenrod",pch=16,cex=0.5)
+  if(nrow(traps)>0){
+    for(j in 1:nrow(traps)){
+      lines(x=c(s[1],traps[j,1]),y=c(s[2],traps[j,2]),col="goldenrod")
+    }
+  }
+}
 
 #inits for nimble
 D0.init <- (sum(nimbuild$z))/(sum(data$InSS)*data$res^2)

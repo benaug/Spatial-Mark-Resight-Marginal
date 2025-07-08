@@ -39,6 +39,20 @@ init.SMR.Dcov.Generalized.Interspersed <- function(data,inits=NA,M=NA){
   
   #assign random locations to assign latent ID samples to individuals
   s.init <- cbind(runif(M,xlim[1],xlim[2]), runif(M,ylim[1],ylim[2]))
+  #but update s.inits for marked individuals before assigning latent detections
+  y.mark2D <- apply(y.mark,c(1,2),sum)
+  y.mID2D <-  apply(y.mID,c(1,2),sum)
+  y.both <- cbind(y.mark2D[1:n.marked,],y.mID2D)
+  X.both <- rbind(X.mark,X.sight)
+  idx <- which(rowSums(y.both)>0)
+  for(i in idx){
+    trps <- matrix(X.both[which(y.both[i,]>0),1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
+  }
   #build plausible true sighting history to better initialize s
   D.sight <- e2dist(s.init, X.sight)
   lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))

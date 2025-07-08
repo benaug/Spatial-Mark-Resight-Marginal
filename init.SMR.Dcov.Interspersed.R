@@ -27,6 +27,17 @@ init.SMR.Dcov.Interspersed <- function(data,inits=NA,M=NA){
   sigma <- inits$sigma
   #assign random locations to assign latent ID samples to individuals
   s.init <- cbind(runif(M,xlim[1],xlim[2]), runif(M,ylim[1],ylim[2]))
+  #but update s.inits for marked individuals before assigning latent detections
+  y.mID2D <- apply(y.mID,c(1,2),sum)
+  idx <- which(rowSums(y.mID2D)>0)
+  for(i in idx){
+    trps <- matrix(X[which(y.mID2D[i,]>0),1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
+  }
   D <- e2dist(s.init, X)
   lamd <- lam0*exp(-D*D/(2*sigma*sigma))
   y.full <- array(0,dim=c(M,J,K))

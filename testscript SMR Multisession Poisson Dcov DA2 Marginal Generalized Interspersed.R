@@ -210,6 +210,28 @@ inits <- list(p0=rep(0.5,N.session),lam0=rep(1,N.session),sigma=rep(1,N.session)
 
 #This function structures the simulated data to fit the model in Nimble (some more restructing below)
 nimbuild <- init.SMR.multisession.Dcov.Generalized.Interspersed(data,inits,M=M)
+#plot to check s inits
+for(g in 1:N.session){
+  image(data[[g]]$x.vals,data[[g]]$y.vals,matrix(data[[g]]$D.cov*data[[g]]$InSS,data[[g]]$n.cells.x,data[[g]]$n.cells.y),
+        main=paste("Session",g),xlab="X",ylab="Y",col=cols1)
+  points(nimbuild$s[g,,],pch=16) #initialized activity centers
+  points(X.sight[[g]],pch=4,col="lightblue")
+  points(X.mark[[g]],pch=4)
+  y.mark2D <- apply(data[[g]]$y.mark,c(1,2),sum)
+  y.mID2D <- apply(data[[g]]$y.mID,c(1,2),sum)
+  for(i in 1:n.marked[g]){
+    trapcaps1 <- which(y.mark2D[i,]>0)
+    trapcaps2 <- which(y.mID2D[i,]>0)
+    traps <-  rbind(X.mark[[g]][trapcaps1,],X.sight[[g]][trapcaps2,])
+    s <- nimbuild$s[g,i,]
+    points(s[1],s[2],col="goldenrod",pch=16,cex=0.5)
+    if(nrow(traps)>0){
+      for(j in 1:nrow(traps)){
+        lines(x=c(s[1],traps[j,1]),y=c(s[2],traps[j,2]),col="goldenrod")
+      }
+    }
+  }
+}
 
 #inits for nimble
 N.init <- rowSums(nimbuild$z.init,na.rm=TRUE)
