@@ -29,6 +29,8 @@ NimModel <- nimbleCode({
   
   #1 Marking Process
   for(i in 1:M){
+	#dunif() here implies uniform distribution within a grid cell
+    #also tells nimble s's are in continuous space, not discrete
     s[i,1] ~ dunif(xlim[1],xlim[2])
     s[i,2] ~ dunif(ylim[1],ylim[2])
     #get cell s_i lives in using look-up table

@@ -50,7 +50,7 @@ init.SMR.Dcov.Natural <- function(data,inits=NA,M1=NA,M2=NA){
     prob <- prob/sum(prob)
     y.full[1:M1,j] <- y.full[1:M1,j] + rmultinom(1,y.mnoID[j],prob=prob)
     #add unmarked
-    prob <- c(rep(0,M1),lamd[(M1+1):M.both])
+    prob <- c(rep(0,M1),lamd[(M1+1):M.both,j])
     prob <- prob/sum(prob)
     y.full[,j] <- y.full[,j] + rmultinom(1,y.um[j],prob=prob)
     #add unk

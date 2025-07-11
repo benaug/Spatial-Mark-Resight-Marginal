@@ -69,7 +69,7 @@ init.SMR.Dcov.Generalized.Interspersed <- function(data,inits=NA,M=NA){
         y.full[1:n.marked,j,k] <- y.full[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
       }
       #add unmarked
-      prob <- c(lamd[1:n.marked,j]*(1-marked.status[,k]),lamd[(n.marked+1):M])
+      prob <- c(lamd[1:n.marked,j]*(1-marked.status[,k]),lamd[(n.marked+1):M,j])
       prob <- prob/sum(prob)
       y.full[,j,k] <- y.full[,j,k] + rmultinom(1,y.um[j,k],prob=prob)
       #add unk

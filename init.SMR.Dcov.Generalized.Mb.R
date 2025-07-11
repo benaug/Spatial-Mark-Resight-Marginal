@@ -105,7 +105,7 @@ init.SMR.Dcov.Generalized.Mb <- function(data,inits=NA,M=NA){
     prob <- prob/sum(prob)
     y.full[1:n.marked,j] <- y.full[1:n.marked,j] + rmultinom(1,y.mnoID[j],prob=prob)
     #add unmarked
-    prob <- c(rep(0,n.marked),lamd[(n.marked+1):M])
+    prob <- c(rep(0,n.marked),lamd[(n.marked+1):M,j])
     prob <- prob/sum(prob)
     y.full[,j] <- y.full[,j] + rmultinom(1,y.um[j],prob=prob)
     #add unk
