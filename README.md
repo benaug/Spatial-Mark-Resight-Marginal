@@ -63,7 +63,6 @@ SMR models with categorical partial IDs can be found here:
 
 https://github.com/benaug/Spatial-Mark-Resight-IDCov
 
-These are both more limited (e.g., no habitat mask, density covariates), but can be modified.
 
 Analogous repositories for different combinations of marked and unmarked data types can be found here:
 
