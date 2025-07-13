@@ -45,7 +45,6 @@ sim.SMR.Dcov.Generalized.Mb <-
     J.sight <- nrow(X.sight)
     
     #trap operation - marking process
-    #trap operation - sighting process
     if(any(is.na(K2D.mark))){
       print("K2D.mark not provided, assuming trap operation is perfect.")
       K2D.mark <- matrix(1,J.mark,K.mark)

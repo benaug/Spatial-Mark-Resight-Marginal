@@ -62,6 +62,7 @@ init.SMR.Dcov.Generalized.Mb <- function(data,inits=NA,M=NA){
   
   #I have not tested that the algorithm above is correct in all cases of trap operation entered.
   ##Check for bugs here##
+  #I've never seen errors in this algorithm when the data is properly formatted. Errors may just be formatting errors.
   for(i in 1:M){
     for(j in 1:J.mark){
       y.check <- y.mark[i,j,]

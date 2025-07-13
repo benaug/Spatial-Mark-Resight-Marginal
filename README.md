@@ -57,7 +57,7 @@ There are single and multisession versions of each model/sampler.
  
 SMR models that allow observation models other than Poisson can be found here:
 
-https://github.com/benaug/Spatial-Mark-Resight
+https://github.com/benaug/Spatial-Mark-Resight-Conditional
 
 SMR models with categorical partial IDs can be found here:
 
