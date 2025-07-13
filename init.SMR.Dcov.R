@@ -36,39 +36,7 @@ init.SMR.Dcov <- function(data,inits=NA,M=NA){
       s.init[i,] <- trps
     }
   }
-  D <- e2dist(s.init, X)
-  lamd <- lam0*exp(-D*D/(2*sigma*sigma))
-  y.full <- matrix(0,M,J)
-  y.full[1:n.marked,] <- y.mID
-  for(j in 1:J){
-    #add marked no ID
-    prob <- lamd[1:n.marked,j]
-    prob <- prob/sum(prob)
-    y.full[1:n.marked,j] <- y.full[1:n.marked,j] + rmultinom(1,y.mnoID[j],prob=prob)
-    #add unmarked
-    prob <- c(rep(0,n.marked),lamd[(n.marked+1):M,j])
-    prob <- prob/sum(prob)
-    y.full[,j] <- y.full[,j] + rmultinom(1,y.um[j],prob=prob)
-    #add unk
-    prob <- lamd[,j]
-    prob <- prob/sum(prob)
-    y.full[,j] <- y.full[,j] + rmultinom(1,y.unk[j],prob=prob)
-    
-  }
-  z.init <- 1*(rowSums(y.full)>0)
-  z.init[1:n.marked] <- 1
-  
-  #update s for individuals assigned samples
-  y.full2D <- y.full
-  idx <- which(rowSums(y.full2D)>0)
-  for(i in idx){
-    trps <- matrix(X[y.full2D[i,]>0,1:2],ncol=2,byrow=FALSE)
-    if(nrow(trps)>1){
-      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
-    }else{
-      s.init[i,] <- trps
-    }
-  }
+  #update using telemetry if you have it
   if(!is.null(dim(data$locs))){
     max.locs <- dim(locs)[2]
     if(n.marked>1){
@@ -79,7 +47,7 @@ init.SMR.Dcov <- function(data,inits=NA,M=NA){
       n.locs.ind <- sum(!is.na(locs[,,1]))
     }
     print("using telemetry to initialize telemetered s. Remove from data if not using in the model.")
-    #update s starts for telemetry guys
+    #update using telemetry if you have it
     for(i in tel.inds){
       if(n.locs.ind[i]>1){
         s.init[i,] <- colMeans(locs[i,1:n.locs.ind[i],])
@@ -104,6 +72,40 @@ init.SMR.Dcov <- function(data,inits=NA,M=NA){
   }else{
     tel.inds <- NA
     n.locs.ind <- NA
+  }
+  
+  D <- e2dist(s.init, X)
+  lamd <- lam0*exp(-D*D/(2*sigma*sigma))
+  y.true <- matrix(0,M,J)
+  y.true[1:n.marked,] <- y.mID
+  for(j in 1:J){
+    #add marked no ID
+    prob <- lamd[1:n.marked,j]
+    prob <- prob/sum(prob)
+    y.true[1:n.marked,j] <- y.true[1:n.marked,j] + rmultinom(1,y.mnoID[j],prob=prob)
+    #add unmarked
+    prob <- c(rep(0,n.marked),lamd[(n.marked+1):M,j])
+    prob <- prob/sum(prob)
+    y.true[,j] <- y.true[,j] + rmultinom(1,y.um[j],prob=prob)
+    #add unk
+    prob <- lamd[,j]
+    prob <- prob/sum(prob)
+    y.true[,j] <- y.true[,j] + rmultinom(1,y.unk[j],prob=prob)
+    
+  }
+  z.init <- 1*(rowSums(y.true)>0)
+  z.init[1:n.marked] <- 1
+  
+  #update s for individuals assigned samples
+  y.true2D <- y.true
+  idx <- which(rowSums(y.true2D)>0)
+  for(i in idx){
+    trps <- matrix(X[y.true2D[i,]>0,1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
   }
   
   #If using a habitat mask, move any s's initialized in non-habitat above to closest habitat

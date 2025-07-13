@@ -53,47 +53,7 @@ init.SMR.Dcov.Generalized.Interspersed <- function(data,inits=NA,M=NA){
       s.init[i,] <- trps
     }
   }
-  #build plausible true sighting history to better initialize s
-  D.sight <- e2dist(s.init, X.sight)
-  lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))
-  y.full <- array(0,dim=c(M,J.sight,K.sight))
-  y.full[1:n.marked,,] <- y.mID
-  marked.status.full <- matrix(0,M,K.sight)
-  marked.status.full[1:n.marked,] <- marked.status
-  for(j in 1:J.sight){
-    for(k in 1:K.sight){
-      #add marked no ID
-      prob <- lamd[1:n.marked,j]*marked.status[,k]
-      prob <- prob/sum(prob)
-      if(sum(y.full[1:n.marked,j,k])>0){
-        y.full[1:n.marked,j,k] <- y.full[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
-      }
-      #add unmarked
-      prob <- c(lamd[1:n.marked,j]*(1-marked.status[,k]),lamd[(n.marked+1):M,j])
-      prob <- prob/sum(prob)
-      y.full[,j,k] <- y.full[,j,k] + rmultinom(1,y.um[j,k],prob=prob)
-      #add unk
-      prob <- lamd[,j]
-      prob <- prob/sum(prob)
-      y.full[,j,k] <- y.full[,j,k] + rmultinom(1,y.unk[j,k],prob=prob)
-    }
-  }
-  z.init <- 1*(rowSums(y.full)>0)
-  z.init[1:n.marked] <- 1
-  
-  #update s.init given marking and sighting histories
-  y.full2D <- apply(y.full,c(1,2),sum)
-  y.both <- cbind(y.mark,y.full2D)
-  X.both <- rbind(X.mark,X.sight)
-  idx <- which(rowSums(y.both)>0)
-  for(i in idx){
-    trps <- matrix(X.both[y.both[i,]>0,1:2],ncol=2,byrow=FALSE)
-    if(nrow(trps)>1){
-      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
-    }else{
-      s.init[i,] <- trps
-    }
-  }
+  #update using telemetry if you have it
   if(!is.null(dim(data$locs))){
     max.locs <- dim(locs)[2]
     if(n.marked>1){
@@ -104,7 +64,7 @@ init.SMR.Dcov.Generalized.Interspersed <- function(data,inits=NA,M=NA){
       n.locs.ind <- sum(!is.na(locs[,,1]))
     }
     print("using telemetry to initialize telemetered s. Remove from data if not using in the model.")
-    #update s starts for telemetry guys
+    #update using telemetry if you have it
     for(i in tel.inds){
       if(n.locs.ind[i]>1){
         s.init[i,] <- colMeans(locs[i,1:n.locs.ind[i],])
@@ -129,6 +89,48 @@ init.SMR.Dcov.Generalized.Interspersed <- function(data,inits=NA,M=NA){
   }else{
     tel.inds <- NA
     n.locs.ind <- NA
+  }
+  
+  #build plausible true sighting history to better initialize s
+  D.sight <- e2dist(s.init, X.sight)
+  lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))
+  y.true <- array(0,dim=c(M,J.sight,K.sight))
+  y.true[1:n.marked,,] <- y.mID
+  marked.status.full <- matrix(0,M,K.sight)
+  marked.status.full[1:n.marked,] <- marked.status
+  for(j in 1:J.sight){
+    for(k in 1:K.sight){
+      #add marked no ID
+      prob <- lamd[1:n.marked,j]*marked.status[,k]
+      prob <- prob/sum(prob)
+      if(sum(y.true[1:n.marked,j,k])>0){
+        y.true[1:n.marked,j,k] <- y.true[1:n.marked,j,k] + rmultinom(1,y.mnoID[j,k],prob=prob)
+      }
+      #add unmarked
+      prob <- c(lamd[1:n.marked,j]*(1-marked.status[,k]),lamd[(n.marked+1):M,j])
+      prob <- prob/sum(prob)
+      y.true[,j,k] <- y.true[,j,k] + rmultinom(1,y.um[j,k],prob=prob)
+      #add unk
+      prob <- lamd[,j]
+      prob <- prob/sum(prob)
+      y.true[,j,k] <- y.true[,j,k] + rmultinom(1,y.unk[j,k],prob=prob)
+    }
+  }
+  z.init <- 1*(rowSums(y.true)>0)
+  z.init[1:n.marked] <- 1
+  
+  #update s.init given marking and sighting histories
+  y.true2D <- apply(y.true,c(1,2),sum)
+  y.both <- cbind(y.mark,y.true2D)
+  X.both <- rbind(X.mark,X.sight)
+  idx <- which(rowSums(y.both)>0)
+  for(i in idx){
+    trps <- matrix(X.both[y.both[i,]>0,1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
   }
   
   #If using a habitat mask, move any s's initialized in non-habitat above to closest habitat

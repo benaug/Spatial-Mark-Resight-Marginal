@@ -42,31 +42,31 @@ init.SMR.Dcov.Natural <- function(data,inits=NA,M1=NA,M2=NA){
   }
   D <- e2dist(s.init, X)
   lamd <- lam0*exp(-D*D/(2*sigma*sigma))
-  y.full <- matrix(0,M.both,J)
-  y.full[1:M1,] <- y.mID
+  y.true <- matrix(0,M.both,J)
+  y.true[1:M1,] <- y.mID
   for(j in 1:J){
     #add marked no ID
     prob <- lamd[1:M1,j]
     prob <- prob/sum(prob)
-    y.full[1:M1,j] <- y.full[1:M1,j] + rmultinom(1,y.mnoID[j],prob=prob)
+    y.true[1:M1,j] <- y.true[1:M1,j] + rmultinom(1,y.mnoID[j],prob=prob)
     #add unmarked
     prob <- c(rep(0,M1),lamd[(M1+1):M.both,j])
     prob <- prob/sum(prob)
-    y.full[,j] <- y.full[,j] + rmultinom(1,y.um[j],prob=prob)
+    y.true[,j] <- y.true[,j] + rmultinom(1,y.um[j],prob=prob)
     #add unk
     prob <- lamd[,j]
     prob <- prob/sum(prob)
-    y.full[,j] <- y.full[,j] + rmultinom(1,y.unk[j],prob=prob)
+    y.true[,j] <- y.true[,j] + rmultinom(1,y.unk[j],prob=prob)
     
   }
-  z.init <- 1*(rowSums(y.full)>0)
+  z.init <- 1*(rowSums(y.true)>0)
   z.init[1:n.marked] <- 1
   
   #update s for individuals assigned samples
-  y.full2D <- y.full
-  idx <- which(rowSums(y.full2D)>0)
+  y.true2D <- y.true
+  idx <- which(rowSums(y.true2D)>0)
   for(i in idx){
-    trps <- matrix(X[y.full2D[i,]>0,1:2],ncol=2,byrow=FALSE)
+    trps <- matrix(X[y.true2D[i,]>0,1:2],ncol=2,byrow=FALSE)
     if(nrow(trps)>1){
       s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
     }else{

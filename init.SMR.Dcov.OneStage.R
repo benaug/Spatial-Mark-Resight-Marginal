@@ -35,53 +35,7 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
       s.init[i,] <- trps
     }
   }
-  D <- e2dist(s.init, X)
-  lamd <- lam0*exp(-D*D/(2*sigma*sigma))
-  
-  y.full <- y.mID #add marked but unidentified to initialize s
-  for(j in 1:J){
-    #add marked no ID
-    prob <- lamd[1:n.marked,j]
-    prob <- prob/sum(prob)
-    y.full[1:n.marked,j] <- y.full[1:n.marked,j] + rmultinom(1,y.mnoID[j],prob=prob)
-  }
-  
-  #update s for marked individuals
-  idx <- which(rowSums(y.full)>0)
-  for(i in idx){
-    trps <- matrix(X[y.full[i,]>0,1:2],ncol=2,byrow=FALSE)
-    if(nrow(trps)>1){
-      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
-    }else{
-      s.init[i,] <- trps
-    }
-  }
-  
-  #allocate unmarked samples to initializes s.inits for unmarked
-  y.full2 <- matrix(0,M,J)
-  for(j in 1:J){
-    #add marked no ID
-    prob <- lamd[,j]
-    prob <- prob/sum(prob)
-    y.full2[,j] <- y.full2[,j] + rmultinom(1,y.all[j],prob=prob)
-  }
-  
-  idx <- which(rowSums(y.full2)>0)
-  rem.idx <- which(idx<=n.marked)
-  if(length(rem.idx)>0){
-    idx <- idx[-rem.idx]
-  }
-  for(i in idx){
-    trps <- matrix(X[y.full2[i,]>0,1:2],ncol=2,byrow=FALSE)
-    if(nrow(trps)>1){
-      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
-    }else{
-      s.init[i,] <- trps
-    }
-  }
-  z.init <- 1*(rowSums(y.full2)>0)
-  z.init[1:n.marked] <- 1
-  
+  #update using telemetry if you have it
   if(!is.null(dim(data$locs))){
     max.locs <- dim(locs)[2]
     if(n.marked>1){
@@ -118,6 +72,52 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
     tel.inds <- NA
     n.locs.ind <- NA
   }
+  D <- e2dist(s.init, X)
+  lamd <- lam0*exp(-D*D/(2*sigma*sigma))
+  
+  y.true <- y.mID #add marked but unidentified to initialize s
+  for(j in 1:J){
+    #add marked no ID
+    prob <- lamd[1:n.marked,j]
+    prob <- prob/sum(prob)
+    y.true[1:n.marked,j] <- y.true[1:n.marked,j] + rmultinom(1,y.mnoID[j],prob=prob)
+  }
+  
+  #update s for marked individuals
+  idx <- which(rowSums(y.true)>0)
+  for(i in idx){
+    trps <- matrix(X[y.true[i,]>0,1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
+  }
+  
+  #allocate unmarked samples to initializes s.inits for unmarked
+  y.true2 <- matrix(0,M,J)
+  for(j in 1:J){
+    #add marked no ID
+    prob <- lamd[,j]
+    prob <- prob/sum(prob)
+    y.true2[,j] <- y.true2[,j] + rmultinom(1,y.all[j],prob=prob)
+  }
+  
+  idx <- which(rowSums(y.true2)>0)
+  rem.idx <- which(idx<=n.marked)
+  if(length(rem.idx)>0){
+    idx <- idx[-rem.idx]
+  }
+  for(i in idx){
+    trps <- matrix(X[y.true2[i,]>0,1:2],ncol=2,byrow=FALSE)
+    if(nrow(trps)>1){
+      s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
+    }else{
+      s.init[i,] <- trps
+    }
+  }
+  z.init <- 1*(rowSums(y.true2)>0)
+  z.init[1:n.marked] <- 1
   
   #If using a habitat mask, move any s's initialized in non-habitat above to closest habitat
   e2dist  <-  function (x, y){
