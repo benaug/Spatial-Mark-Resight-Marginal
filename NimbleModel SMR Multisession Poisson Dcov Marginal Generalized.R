@@ -57,7 +57,7 @@ NimModel <- nimbleCode({
       s.cell[g,i] <- cells[g,trunc(s[g,i,1]/res[g])+1,trunc(s[g,i,2]/res[g])+1]
       #categorical likelihood for this cell, equivalent to zero's trick
       #also disallowing s's in non-habitat
-      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]],InSS=InSS[g,s.cell[g,i]])
+      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]])
       pd[g,i,1:J.mark[g]] <- GetDetectionProb(s=s[g,i,1:2],X=X.mark[g,1:J.mark[g],1:2],J=J.mark[g],
                                               sigma=sigma[g],p0=p0[g],z=z[g,i])
       y.mark[g,i,1:J.mark[g]] ~ dBinomialVector(pd[g,i,1:J.mark[g]],K1D=K1D.mark[g,1:J.mark[g]],z=z[g,i])

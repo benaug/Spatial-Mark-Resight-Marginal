@@ -55,7 +55,7 @@ NimModel <- nimbleCode({
       s.cell[g,i] <- cells[g,trunc(s[g,i,1]/res[g])+1,trunc(s[g,i,2]/res[g])+1]
       #categorical likelihood for this cell, equivalent to zero's trick
       #also disallowing s's in non-habitat
-      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]],InSS=InSS[g,s.cell[g,i]])
+      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]])
       lam[g,i,1:J[g]] <- GetDetectionRate(s = s[g,i,1:2], X = X[g,1:J[g],1:2], J=J[g],sigma=sigma[g], lam0=lam0[g], z=z[g,i])
       for(k in 1:K[g]){
         #marked and identified detections. only count when marked.status[i,k] = 1
