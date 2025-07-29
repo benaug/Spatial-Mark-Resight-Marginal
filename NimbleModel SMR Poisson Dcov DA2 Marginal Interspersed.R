@@ -54,7 +54,7 @@ NimModel <- nimbleCode({
     s.cell[i] <- cells[trunc(s[i,1]/res)+1,trunc(s[i,2]/res)+1]
     #categorical likelihood for this cell, equivalent to zero's trick
     #also disallowing s's in non-habitat
-    dummy.data[i] ~ dCell(pi.cell[s.cell[i]],InSS=InSS[s.cell[i]])
+    dummy.data[i] ~ dCell(pi.cell[s.cell[i]])
     lam[i,1:J] <- GetDetectionRate(s = s[i,1:2], X = X[1:J,1:2], J=J,sigma=sigma, lam0=lam0, z=z[i])
   }#custom Metropolis-Hastings update for N.UM/z[(n.marked+1):M]
   
@@ -86,8 +86,8 @@ NimModel <- nimbleCode({
   #If you have telemetry
   for(i in 1:n.tel.inds){
     for(m in 1:n.locs.ind[i]){
-      locs[tel.inds[i],m,1] ~ dnorm(s[tel.inds[i],1],sd=sigma)
-      locs[tel.inds[i],m,2] ~ dnorm(s[tel.inds[i],2],sd=sigma)
+      locs[i,m,1] ~ dnorm(s[tel.inds[i],1],sd=sigma)
+      locs[i,m,2] ~ dnorm(s[tel.inds[i],2],sd=sigma)
     }
   }
 })# end model

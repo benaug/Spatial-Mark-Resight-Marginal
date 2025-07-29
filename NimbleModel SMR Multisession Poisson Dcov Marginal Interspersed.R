@@ -73,7 +73,7 @@ NimModel <- nimbleCode({
       s.cell[g,i] <- cells[g,trunc(s[g,i,1]/res[g])+1,trunc(s[g,i,2]/res[g])+1]
       #categorical likelihood for this cell, equivalent to zero's trick
       #also disallowing s's in non-habitat
-      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]],InSS=InSS[g,s.cell[g,i]])
+      dummy.data[g,i] ~ dCell(pi.cell[g,s.cell[g,i]])
       lam[g,i,1:J[g]] <- GetDetectionRate(s = s[g,i,1:2], X = X[g,1:J[g],1:2], J=J[g],sigma=sigma[g], lam0=lam0[g], z=z[g,i])
     }
     
@@ -104,8 +104,8 @@ NimModel <- nimbleCode({
     #If you have telemetry
     for(i in 1:n.tel.inds[g]){
       for(m in 1:n.locs.ind[g,i]){
-        locs[g,tel.inds[g,i],m,1] ~ dnorm(s[g,tel.inds[g,i],1],sd=sigma[g])
-        locs[g,tel.inds[g,i],m,2] ~ dnorm(s[g,tel.inds[g,i],2],sd=sigma[g])
+        locs[g,i,m,1] ~ dnorm(s[g,tel.inds[g,i],1],sd=sigma[g])
+        locs[g,i,m,2] ~ dnorm(s[g,tel.inds[g,i],2],sd=sigma[g])
       }
     }
   }
