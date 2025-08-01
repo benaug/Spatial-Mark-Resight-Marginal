@@ -118,6 +118,8 @@ zSampler <- nimbleFunction(
 
             #turn off
             bigLam.unmarked.proposed <- bigLam.unmarked.initial - model$lam[pick,] #subtract these out before calculate
+            #make sure you didn't end up with any negative numbers due to machine precision
+            bigLam.unmarked.proposed[bigLam.unmarked.proposed<0] <- 0
             model$calculate(lam.nodes[pick])
             model$bigLam.unmarked <<- bigLam.unmarked.proposed
             model$calculate(lam.um.nodes)
@@ -127,7 +129,7 @@ zSampler <- nimbleFunction(
             lp.proposed.N <- model$calculate(N.node)
             lp.proposed.y.um <- model$calculate(y.um.nodes)
             lp.proposed.y.unk <- model$calculate(y.unk.nodes)
-
+   
             #MH step
             log_MH_ratio <- (lp.proposed.N + lp.proposed.y.um + lp.proposed.y.unk) -
               (lp.initial.N + lp.initial.y.um + lp.initial.y.unk)
