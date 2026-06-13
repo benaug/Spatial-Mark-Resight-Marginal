@@ -8,7 +8,7 @@ e2dist <- function (x, y){
 
 sim.SMR.Dcov.Interspersed <-
   function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,res=NA,n.marked=NA,lam0=NA,
-           theta.d=NA,sigma=0.50,K=10,X=X,xlim=NA,ylim=NA,
+           theta.d=NA,sigma=0.50,K=10,X=NA,xlim=NA,ylim=NA,
            theta.marked=c(1,0,0),theta.unmarked=1,K2D=NA,tlocs=0,obstype="poisson",
            p.half=NA){
     if(sum(theta.marked)!=1)stop("theta.marked must sum to 1.")
@@ -80,7 +80,7 @@ sim.SMR.Dcov.Interspersed <-
     k.half <- floor(K/2)
     half.ind <- rep(0,n.marked)
     for(i in 1:n.marked){
-      half.ind[i] <- rbinom(1,1,p.half) #1 is a "half individual" only marked for 1st half of occasions
+      half.ind[i] <- rbinom(1,1,p.half) #1 is a "half individual" only marked for 2nd half of occasions
       if(half.ind[i]==1){
         marked.status[i,1:k.half] <- 0
       }
@@ -89,6 +89,7 @@ sim.SMR.Dcov.Interspersed <-
     #can use data simulator that does not consider marked status from here
     #by moving marked.status=0 samples to new, fake, unmarked individuals
     n.half.inds <- sum(half.ind)
+    y.orig <- y
     y <- abind(y,array(0,dim=c(n.half.inds,J,K)),along=1)
     idx <- N + 1
     if(n.half.inds>0){
@@ -116,11 +117,17 @@ sim.SMR.Dcov.Interspersed <-
       }
     }
     
-    y.mID <- y.event[1:n.marked,,,1]
-    y.mnoID <- apply(y.event[1:n.marked,,,2],c(2,3),sum)
-    y.um <- apply(y.event[(n.marked+1):N,,,2],c(2,3),sum)
-    y.unk <- apply(y.event[1:n.marked,,,3],c(2,3),sum) + apply(y.event[(n.marked+1):N,,,3],c(2,3),sum)
-    
+    y.mID <- array(y.event[1:n.marked,,,1],dim=c(n.marked,J,K))
+    y.mnoID <- apply(y.event[1:n.marked,,,2,drop=FALSE],c(2,3),sum)
+    y.unk.marked <- apply(y.event[1:n.marked,,,3,drop=FALSE],c(2,3),sum)
+    if(n.marked<N){
+      y.um <- apply(y.event[(n.marked+1):N,,,2,drop=FALSE],c(2,3),sum)
+      y.unk.unmarked <- apply(y.event[(n.marked+1):N,,,3,drop=FALSE],c(2,3),sum)
+    }else{
+      y.um <- matrix(0,J,K)
+      y.unk.unmarked <- matrix(0,J,K)
+    }
+    y.unk <- y.unk.marked + y.unk.unmarked
     if(!sum(y)==(sum(y.mID)+sum(y.mnoID)+sum(y.um)+sum(y.unk)))stop("data simulator bug")
     
     #Telemetry observations
@@ -135,24 +142,16 @@ sim.SMR.Dcov.Interspersed <-
       locs <- NA
     }
     
-    if(n.marked>1){
-      n.M <- sum(rowSums(y[1:n.marked,,])>0)
-    }else{
-      if(sum(y[1,,])>0){
-        n.M <- 1
-      }else{
-        n.M <- 0
-      }
-    }
+    n.M <- sum(apply(y.orig[1:n.marked,,,drop=FALSE],1,sum)>0)
     if(n.marked<N){
-      n.UM <- sum(rowSums(y[(n.marked+1):N,,])>0)
+      n.UM <- sum(apply(y.orig[(n.marked+1):N.original,,,drop=FALSE],1,sum)>0)
     }else{
       n.UM <- 0
     }
     
     out <- list(y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,marked.status=marked.status, #observed data
                 n.marked=n.marked,locs=locs,n.M=n.M,n.UM=n.UM,
-                y=y,s=s,#true data
+                y=y.orig,s=s,#true data
                 X=X,K=K,K2D=K2D,
                 xlim=xlim,ylim=ylim,x.vals=x.vals,y.vals=y.vals,dSS=dSS,cells=cells,
                 n.cells=n.cells,n.cells.x=n.cells.x,n.cells.y=n.cells.y,s.cell=s.cell,

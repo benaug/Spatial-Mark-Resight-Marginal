@@ -89,7 +89,9 @@ sim.SMR.Dcov.Generalized.Mb <-
       lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J.sight){
-          y[i,j,1:K1D.sight[j]] <- rpois(K1D.sight[j],lamd[i,j])
+          if(K1D.sight[j]>0){
+            y[i,j,1:K1D.sight[j]] <- rpois(K1D.sight[j],lamd[i,j])
+          }
         }
       } 
     }else if(obstype=="negbin"){
@@ -98,7 +100,9 @@ sim.SMR.Dcov.Generalized.Mb <-
       lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J.sight){
-          y[i,j,1:K1D.sight[j]] <- rnbinom(K1D.sight[j],mu=lamd[i,j],size=theta.d)
+          if(K1D.sight[j]>0){
+            y[i,j,1:K1D.sight[j]] <- rnbinom(K1D.sight[j],mu=lamd[i,j],size=theta.d)
+          }
         }
       } 
     }else{
@@ -115,7 +119,7 @@ sim.SMR.Dcov.Generalized.Mb <-
     n.marked <- length(cap.idx) #number of marked individuals
     #rearrange sighting history to put marked individuals at the top for code below to work correctly
     umguys <- setdiff(1:N,cap.idx) 
-    y <- abind(y[cap.idx,,],y[umguys,,],along=1)
+    y <- abind(y[cap.idx,,,drop=FALSE],y[umguys,,,drop=FALSE],along=1)
     #rearrange s to simulate telemetry correctly
     s <- rbind(s[cap.idx,],s[umguys,])
     
@@ -133,10 +137,17 @@ sim.SMR.Dcov.Generalized.Mb <-
       }
     }
     
-    y.mID <- apply(y.event[1:n.marked,,,1],c(1,2),sum)
-    y.mnoID <- apply(y.event[1:n.marked,,,2],2,sum)
-    y.um <- apply(y.event[(n.marked+1):N,,,2],2,sum)
-    y.unk <- apply(y.event[1:n.marked,,,3],2,sum) + apply(y.event[(n.marked+1):N,,,3],2,sum)
+    y.mID <- apply(y.event[1:n.marked,,,1,drop=FALSE],c(1,2),sum)
+    y.mnoID <- apply(y.event[1:n.marked,,,2,drop=FALSE],2,sum)
+    y.unk.marked <- apply(y.event[1:n.marked,,,3,drop=FALSE],2,sum)
+    if(n.marked<N){
+      y.um <- apply(y.event[(n.marked+1):N,,,2,drop=FALSE],2,sum)
+      y.unk.unmarked <- apply(y.event[(n.marked+1):N,,,3,drop=FALSE],2,sum)
+    }else{
+      y.um <- rep(0,J.sight)
+      y.unk.unmarked <- rep(0,J.sight)
+    }
+    y.unk <- y.unk.marked + y.unk.unmarked
     
     if(!sum(y)==(sum(y.mID)+sum(y.mnoID)+sum(y.um)+sum(y.unk)))stop("data simulator bug")
     
@@ -152,17 +163,9 @@ sim.SMR.Dcov.Generalized.Mb <-
       locs <- NA
     }
     
-    if(n.marked>1){
-      n.M <- sum(rowSums(y[1:n.marked,,])>0)
-    }else{
-      if(sum(y[1,,])>0){
-        n.M <- 1
-      }else{
-        n.M <- 0
-      }
-    }
+    n.M <- sum(apply(y[1:n.marked,,,drop=FALSE],1,sum)>0)
     if(n.marked<N){
-      n.UM <- sum(rowSums(y[(n.marked+1):N,,])>0)
+      n.UM <- sum(apply(y[(n.marked+1):N,,,drop=FALSE],1,sum)>0)
     }else{
       n.UM <- 0
     }

@@ -86,7 +86,9 @@ sim.SMR.Dcov.Generalized.Interspersed <-
     pd <- p0*exp(-D.mark*D.mark/(2*sigma*sigma))
     for(i in 1:N){
       for(j in 1:J.mark){
-        y.mark[i,j,1:K1D.mark[j]] <- rbinom(K1D.mark[j],size=1,prob=pd[i,j])
+        if(K1D.mark[j]>0){
+          y.mark[i,j,1:K1D.mark[j]] <- rbinom(K1D.mark[j],size=1,prob=pd[i,j])
+        }
       }
     }
     
@@ -123,7 +125,7 @@ sim.SMR.Dcov.Generalized.Interspersed <-
 
     #rearrange sighting history to put marked individuals at the top for code below to work correctly
     umguys <- setdiff(1:N,cap.idx) 
-    y <- abind(y[cap.idx,,],y[umguys,,],along=1)
+    y <- abind(y[cap.idx,,,drop=FALSE],y[umguys,,,drop=FALSE],along=1)
     #rearrange s to simulate telemetry correctly
     s <- rbind(s[cap.idx,],s[umguys,])
     
@@ -145,15 +147,18 @@ sim.SMR.Dcov.Generalized.Interspersed <-
     #can use data simulator that does not consider marked status from here
     #by moving marked.status=0 samples to new, fake, unmarked individuals
     partial.inds <- which(rowSums(marked.status)<K.sight)
-    n.partial.inds <- sum(partial.inds)
+    n.partial.inds <- length(partial.inds)
+    y.orig <- y
     y <- abind(y,array(0,dim=c(n.partial.inds,J.sight,K.sight)),along=1)
     idx <- N + 1
     if(n.partial.inds>0){
       for(i in partial.inds){
         k.split <- which(marked.status[i,]==1)[1] - 1
-        tmp <- y[i,,1:k.split] #this marked guy's history to move to a new, fake, unmarked individual
-        y[i,,1:k.split] <- 0 #zero marked guy out
-        y[idx,,1:k.split] <- tmp #add to fake unmarked guy
+        if(k.split>0){
+          tmp <- y[i,,1:k.split]
+          y[i,,1:k.split] <- 0
+          y[idx,,1:k.split] <- tmp
+        }
         idx <- idx + 1
       }
     }
@@ -174,10 +179,17 @@ sim.SMR.Dcov.Generalized.Interspersed <-
       }
     }
     
-    y.mID <- y.event[1:n.marked,,,1]
-    y.mnoID <- apply(y.event[1:n.marked,,,2],c(2,3),sum)
-    y.um <- apply(y.event[(n.marked+1):N,,,2],c(2,3),sum)
-    y.unk <- apply(y.event[1:n.marked,,,3],c(2,3),sum) + apply(y.event[(n.marked+1):N,,,3],c(2,3),sum)
+    y.mID <- array(y.event[1:n.marked,,,1],dim=c(n.marked,J.sight,K.sight))
+    y.mnoID <- apply(y.event[1:n.marked,,,2,drop=FALSE],c(2,3),sum)
+    y.unk.marked <- apply(y.event[1:n.marked,,,3,drop=FALSE],c(2,3),sum)
+    if(n.marked<N){
+      y.um <- apply(y.event[(n.marked+1):N,,,2,drop=FALSE],c(2,3),sum)
+      y.unk.unmarked <- apply(y.event[(n.marked+1):N,,,3,drop=FALSE],c(2,3),sum)
+    }else{
+      y.um <- matrix(0,J.sight,K.sight)
+      y.unk.unmarked <- matrix(0,J.sight,K.sight)
+    }
+    y.unk <- y.unk.marked + y.unk.unmarked
     
     if(!sum(y)==(sum(y.mID)+sum(y.mnoID)+sum(y.um)+sum(y.unk)))stop("data simulator bug")
     
@@ -193,28 +205,20 @@ sim.SMR.Dcov.Generalized.Interspersed <-
       locs <- NA
     }
     
-    if(n.marked>1){
-      n.M <- sum(rowSums(y[1:n.marked,,])>0)
-    }else{
-      if(sum(y[1,,])>0){
-        n.M <- 1
-      }else{
-        n.M <- 0
-      }
-    }
-    if(n.marked<N){
-      n.UM <- sum(rowSums(y[(n.marked+1):N,,])>0)
+    n.M <- sum(apply(y.orig[1:n.marked,,,drop=FALSE],1,sum)>0)
+    
+    if(n.marked<N.original){
+      n.UM <- sum(apply(y.orig[(n.marked+1):N.original,,,drop=FALSE],1,sum)>0)
     }else{
       n.UM <- 0
     }
     
     y.mark <- apply(y.mark,c(1,2),sum)
-    y.mark <- apply(y.mark,c(1,2),sum)
     s.marked <- s[IDmarked,]
     
     out <- list(y.mark=y.mark,y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,marked.status=marked.status, #observed data
                 n.marked=n.marked,locs=locs,n.M=n.M,n.UM=n.UM,
-                y=y,s=s,s.marked=s.marked,#true data
+                y=y.orig,s=s,s.marked=s.marked,#true data
                 X.mark=X.mark,K.mark=K.mark,K1D.mark=K1D.mark,
                 X.sight=X.sight,K.sight=K.sight,K2D.sight=K2D.sight,
                 xlim=xlim,ylim=ylim,x.vals=x.vals,y.vals=y.vals,dSS=dSS,cells=cells,

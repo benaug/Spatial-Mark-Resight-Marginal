@@ -6,7 +6,7 @@ e2dist <- function (x, y){
 
 sim.SMR.Dcov <-
   function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,res=NA,n.marked=NA,lam0=NA,
-           theta.d=NA,sigma=0.50,K=10,X=X,xlim=NA,ylim=NA,
+           theta.d=NA,sigma=0.50,K=10,X=NA,xlim=NA,ylim=NA,
            theta.marked=c(1,0,0),theta.unmarked=1,K1D=NA,tlocs=0,obstype="poisson"){
     if(sum(theta.marked)!=1)stop("theta.marked must sum to 1.")
     if(theta.unmarked<0|theta.unmarked>1)stop("theta.unmarked must be between 0 and 1.")
@@ -63,7 +63,9 @@ sim.SMR.Dcov <-
       lamd <- lam0*exp(-D*D/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J){
-          y[i,j,1:K1D[j]] <- rpois(K1D[j],lamd[i,j])
+          if(K1D[j]>0){
+            y[i,j,1:K1D[j]] <- rpois(K1D[j],lamd[i,j])
+          }
         }
       } 
     }else if(obstype=="negbin"){
@@ -72,7 +74,9 @@ sim.SMR.Dcov <-
       lamd <- lam0*exp(-D*D/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J){
-          y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
+          if(K1D[j]>0){
+            y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
+          }
         }
       } 
     }else{
@@ -94,10 +98,15 @@ sim.SMR.Dcov <-
       }
     }
     
-    y.mID <- apply(y.event[1:n.marked,,,1],c(1,2),sum)
-    y.mnoID <- apply(y.event[1:n.marked,,,2],2,sum)
-    y.um <- apply(y.event[(n.marked+1):N,,,2],2,sum)
-    y.unk <- apply(y.event[1:n.marked,,,3],2,sum) + apply(y.event[(n.marked+1):N,,,3],2,sum)
+    y.mID <- apply(y.event[1:n.marked,,,1,drop=FALSE],c(1,2),sum)
+    y.mnoID <- apply(y.event[1:n.marked,,,2,drop=FALSE],2,sum)
+    if(n.marked<N){
+      y.um <- apply(y.event[(n.marked+1):N,,,2,drop=FALSE],2,sum)
+      y.unk <- apply(y.event[1:n.marked,,,3,drop=FALSE],2,sum) + apply(y.event[(n.marked+1):N,,,3,drop=FALSE],2,sum)
+    }else{
+      y.um <- rep(0,J)
+      y.unk <- apply(y.event[1:n.marked,,,3,drop=FALSE],2,sum)
+    }
     
     if(!sum(y)==(sum(y.mID)+sum(y.mnoID)+sum(y.um)+sum(y.unk)))stop("data simulator bug")
     
@@ -113,17 +122,9 @@ sim.SMR.Dcov <-
       locs <- NA
     }
     
-    if(n.marked>1){
-      n.M <- sum(rowSums(y[1:n.marked,,])>0)
-    }else{
-      if(sum(y[1,,])>0){
-        n.M <- 1
-      }else{
-        n.M <- 0
-      }
-    }
+    n.M <- sum(apply(y[1:n.marked,,,drop=FALSE],1,sum)>0)
     if(n.marked<N){
-      n.UM <- sum(rowSums(y[(n.marked+1):N,,])>0)
+      n.UM <- sum(apply(y[(n.marked+1):N,,,drop=FALSE],1,sum)>0)
     }else{
       n.UM <- 0
     }

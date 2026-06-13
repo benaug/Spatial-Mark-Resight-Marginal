@@ -6,7 +6,7 @@ e2dist <- function (x, y){
 
 sim.SMR.Dcov.Natural <-
   function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,res=NA,p.marked=NA,lam0=NA,
-           theta.d=NA,sigma=0.50,K=10,X=X,xlim=NA,ylim=NA,
+           theta.d=NA,sigma=0.50,K=10,X=NA,xlim=NA,ylim=NA,
            theta.marked=c(1,0,0),theta.unmarked=1,K1D=NA,obstype="poisson"){
     if(sum(theta.marked)!=1)stop("theta.marked must sum to 1.")
     if(theta.unmarked<0|theta.unmarked>1)stop("theta.unmarked must be between 0 and 1.")
@@ -63,7 +63,9 @@ sim.SMR.Dcov.Natural <-
       lamd <- lam0*exp(-D*D/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J){
-          y[i,j,1:K1D[j]] <- rpois(K1D[j],lamd[i,j])
+          if(K1D[j]>0){
+            y[i,j,1:K1D[j]] <- rpois(K1D[j],lamd[i,j])
+          }
         }
       } 
     }else if(obstype=="negbin"){
@@ -72,7 +74,9 @@ sim.SMR.Dcov.Natural <-
       lamd <- lam0*exp(-D*D/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J){
-          y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
+          if(K1D[j]>0){
+            y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
+          }
         }
       } 
     }else{
@@ -83,11 +87,12 @@ sim.SMR.Dcov.Natural <-
     
     
     cap.idx <- which(rowSums(y)>0)
-    y <- y[cap.idx,,]
+    y <- y[cap.idx,,,drop=FALSE]
     #number of identifiable individuals who were captured. If we don't simulate a marked with ID detection for an
     #identifiable individual, we need to remove these from n.marked and y.mID (at the end of script)
     n.cap <- length(cap.idx)
     n.marked <- rbinom(1,n.cap,p.marked)
+    if(n.marked==0)stop("Simulation failure: didn't detect any marked individuals")
     IDmarked <- 1:n.marked
     
     y.event <- array(0,dim=c(n.cap,J,K,3))
@@ -101,36 +106,35 @@ sim.SMR.Dcov.Natural <-
       }
     }
     
-    y.mID <- apply(y.event[1:n.marked,,,1],c(1,2),sum)
-    y.mnoID <- apply(y.event[1:n.marked,,,2],2,sum)
-    y.um <- apply(y.event[(n.marked+1):n.cap,,,2],2,sum)
-    y.unk <- apply(y.event[1:n.marked,,,3],2,sum) + apply(y.event[(n.marked+1):n.cap,,,3],2,sum)
+    # Summaries before removing marked individuals with no ID detections.
+    # n.marked.true.cap = number of detected individuals that truly have natural marks.
+    n.marked.true.cap <- n.marked
     
-    if(n.marked>1){
-      n.M <- sum(rowSums(y[1:n.marked,,])>0)
+    y.mID <- apply(y.event[1:n.marked.true.cap,,,1,drop=FALSE],c(1,2),sum)
+    y.mnoID <- apply(y.event[1:n.marked.true.cap,,,2,drop=FALSE],2,sum)
+    y.unk.marked <- apply(y.event[1:n.marked.true.cap,,,3,drop=FALSE],2,sum)
+    
+    if(n.marked.true.cap<n.cap){
+      y.um <- apply(y.event[(n.marked.true.cap+1):n.cap,,,2,drop=FALSE],2,sum)
+      y.unk.unmarked <- apply(y.event[(n.marked.true.cap+1):n.cap,,,3,drop=FALSE],2,sum)
     }else{
-      if(sum(y[1,,])>0){
-        n.M <- 1
-      }else{
-        n.M <- 0
-      }
+      y.um <- rep(0,J)
+      y.unk.unmarked <- rep(0,J)
     }
-    if(n.marked<N){
-      n.UM <- sum(rowSums(y[(n.marked+1):nrow(y),,])>0)
-    }else{
-      n.UM <- 0
-    }
-    
-    
-    #fix this
-    
-    #final adjustment. We simulated the number of marked, identifiable, individuals, n.marked. But we may not
-    #obtain a marked with ID detection of them, so remove them from y.mID and n.marked
+    y.unk <- y.unk.marked + y.unk.unmarked
+    # Final adjustment:
+    # n.marked should be the number of detected marked individuals observed with ID.
     rem.idx <- which(rowSums(y.mID)==0)
     if(length(rem.idx)>0){
-      y.mID <- y.mID[-rem.idx,]
+      y.mID <- y.mID[-rem.idx,,drop=FALSE]
     }
     n.marked <- nrow(y.mID)
+    if(n.marked==0)stop("Simulation failure: didn't detect any marked individuals with ID.")
+    n.M <- n.marked
+    # n.UM here is the number of detected individuals without an observed ID.
+    # This includes truly unmarked detected individuals plus naturally marked individuals
+    # that were detected but never identified.
+    n.UM <- n.cap - n.marked
     
     out <- list(y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,n.marked=n.marked, #observed data
                 y=y,s=s,n.UM=n.UM, #true data
