@@ -72,9 +72,7 @@ sim.SMR.Dcov.Natural <-
       lamd <- lam0*exp(-D*D/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J){
-          for(k in 1:K){
-            y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
-          }
+          y[i,j,1:K1D[j]] <- rnbinom(K1D[j],mu=lamd[i,j],size=theta.d)
         }
       } 
     }else{

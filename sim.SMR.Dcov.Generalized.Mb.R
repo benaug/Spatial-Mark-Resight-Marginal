@@ -98,9 +98,7 @@ sim.SMR.Dcov.Generalized.Mb <-
       lamd <- lam0*exp(-D.sight*D.sight/(2*sigma*sigma))
       for(i in 1:N){
         for(j in 1:J.sight){
-          for(k in 1:K.sight){
-            y[i,j,1:K1D.sight[j]] <- rnbinom(K1D.sight[j],mu=lamd[i,j],size=theta.d)
-          }
+          y[i,j,1:K1D.sight[j]] <- rnbinom(K1D.sight[j],mu=lamd[i,j],size=theta.d)
         }
       } 
     }else{
@@ -113,7 +111,7 @@ sim.SMR.Dcov.Generalized.Mb <-
     cap.idx <- which(rowSums(y.mark)>0)
     if(length(cap.idx)==0)stop("Simulated 0 marked individuals.")
     
-    y.mark <- y.mark[cap.idx,,] #marking process history
+    y.mark <- y.mark[cap.idx,,,drop=FALSE] #marking process history
     n.marked <- length(cap.idx) #number of marked individuals
     #rearrange sighting history to put marked individuals at the top for code below to work correctly
     umguys <- setdiff(1:N,cap.idx) 
