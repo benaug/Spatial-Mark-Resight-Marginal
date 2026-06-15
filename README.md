@@ -30,6 +30,10 @@ https://academic.oup.com/jmammal/article/95/2/382/866592
 
 5) generalized SMR with known number of marked individuals and interspersed marking and sighting (Whittington et al. 2018)
 
+5b) subversion of 5 that allows 2 mark types with different theta.marked rates. Data simulator set up for a scenario where GPS collars
+can fail such that individual ID is no longer produced and all samples are marked but no ID or unknown marked status. 
+Model file handles more general 2 mark type scenarios. E.g., GPS collars vs. ear tags. These files indicated with "GPSfail".
+
 6) One Stage SMR where the marked individual data is used twice (Whittington et al. 2025): 
 
 https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.70246
@@ -40,8 +44,8 @@ It is a modification of the Two Stage approach of Margenau et al. (2022) that do
 https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/eap.2553
 
 My version here differs from Whittington et al. (2025) in that I allow for marked but no ID detections to be included. Margenau et al. (2022) say 
-"In the instance a marked individual cannot be reliably recognized in camera photographs, perhaps due to body positioning, vegetation obstruction, or blurriness, the data record should be discarded from stage one of the model but included as a record in stage two."
-, but this suggestion will introduce bias, whether they are talking about marked with no ID or unknown marked status individuals (I can't tell 100%). 
+"In the instance a marked individual cannot be reliably recognized in camera photographs, perhaps due to body positioning, vegetation obstruction, or blurriness, the data record should be discarded from stage one of the model but included as a record in stage two.",
+but this suggestion will introduce bias, whether they are talking about marked with no ID or unknown marked status individuals (I can't tell 100%). 
 One and Two Stage approaches require a solution for unknown marked status samples if they occur. 
 In the specific case where marked and unmarked individuals' detections are equally likely to be unknown mark status events, you can use
 One and Two Stage approaches without introducing bias by removing these samples from *both stages* of the analysis. More concretely, I mean when
@@ -53,7 +57,7 @@ I ran 1 scenario each of single and multisession. There was -6.5% bias for the d
 scenario. I probably needed to use more than 100 data sets for the single session scenario given how high the CV for the density covariate beta
 was. In both, the coverage of lam0 was around 0.90, so perhaps a bit low from using the data twice. Overall, looks good.
 
-There are single and multisession versions of each model/sampler.
+There are single and multisession versions of most models/samplers.
  
 SMR models that allow observation models other than Poisson can be found here:
 
@@ -62,7 +66,6 @@ https://github.com/benaug/Spatial-Mark-Resight-Conditional
 SMR models with categorical partial IDs can be found here:
 
 https://github.com/benaug/Spatial-Mark-Resight-IDCov
-
 
 Analogous repositories for different combinations of marked and unmarked data types can be found here:
 
