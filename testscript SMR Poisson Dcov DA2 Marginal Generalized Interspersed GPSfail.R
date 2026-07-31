@@ -241,7 +241,6 @@ Nimdata <- list(y.mark=nimbuild$y.mark, #marking process
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
                 y.um=nimbuild$y.um, #unmarked
                 y.unk=nimbuild$y.unk, #unk marked status
-                marked.status=data$marked.status, #individual by occasion marked status for marked guys
                 mark.class0=mark.class0,mark.class1=mark.class1,mark.class2=mark.class2,
                 dummy.data=dummy.data,cells=data$cells,InSS=data$InSS,
                 X.mark=as.matrix(data$X.mark),X.sight=as.matrix(data$X.sight),locs=data$locs)
