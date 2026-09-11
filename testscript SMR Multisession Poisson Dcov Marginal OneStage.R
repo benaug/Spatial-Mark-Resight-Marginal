@@ -205,7 +205,7 @@ for(g in 1:N.session){
   for(i in 1:n.marked[g]){
     trapcaps <- which(data[[g]]$y.mID[i,]>0)
     traps <-  rbind(X[[g]][trapcaps,])
-    s <- nimbuild$s[g,i,]
+    s <- nimbuild$s.m[g,i,]
     points(s[1],s[2],col="goldenrod",pch=16)
     if(nrow(traps)>0){
       for(j in 1:nrow(traps)){
@@ -219,7 +219,8 @@ for(g in 1:N.session){
 N.init <- rowSums(nimbuild$z.init,na.rm=TRUE)
 D0.init <- (rowSums(nimbuild$z.init))/(rowSums(nimbuild$InSS)*nimbuild$cellArea)
 
-Niminits <- list(N=N.init,z=nimbuild$z.init,s=nimbuild$s.init,D0=D0.init,D.beta1=rep(0,N.session),
+Niminits <- list(N=N.init,z=nimbuild$z.init,s=nimbuild$s,s.m=nimbuild$s.m,
+                 D0=D0.init,D.beta1=rep(0,N.session),
                  lam0.fixed=1,sigma.fixed=1,theta.thin.fixed=0.5)
 
 #make z data for marked individuals
@@ -247,7 +248,7 @@ constants <- list(N.session=N.session,n.marked=n.marked,M=M,J=J,K1D=nimbuild$K1D
                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,D.cov=nimbuild$D.cov,res=nimbuild$res,
                   cellArea=nimbuild$cellArea,n.cells=nimbuild$n.cells,
                   #telemetry stuff
-                  tel.inds=nimbuild$tel.inds,
+                  tel.ID=nimbuild$tel.ID,tel.session=nimbuild$tel.session,
                   n.tel.inds=nimbuild$n.tel.inds,n.locs.ind=nimbuild$n.locs.ind)
 Nimdata <- list(y.mID=nimbuild$y.mID, #marked with ID
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
@@ -270,16 +271,16 @@ config.nodes <- c('lam0.fixed','sigma.fixed','theta.thin.fixed')
 conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,monitors2=parameters2, thin2=nt2,nodes=config.nodes)
 
 # how many z proposals per iteration per session for marked and unmarked individuals?
-z.ups <- round((M-n.marked)*0.25) #doing 25% of M-n.marked
+z.ups <- round(M*0.25) #doing 25% of M in each session
 
 for(g in 1:N.session){
   #nodes used for update, calcNodes + z nodes
   lam.nodes <- Rmodel$expandNodeNames(paste("lam[",g,",1:",M[g],",1:",J[g],"]"))
   y.all.nodes <- Rmodel$expandNodeNames(paste("y.all[",g,",1:",J[g],"]"))
-  bigLam.unmarked.nodes <- Rmodel$expandNodeNames(paste("bigLam.unmarked[",g,",1:",J[g],"]")) #only need this in calcNodes
+  bigLam.all.nodes <- Rmodel$expandNodeNames(paste("bigLam.all[",g,",1:",J[g],"]")) #only need this in calcNodes
   N.node <- Rmodel$expandNodeNames(paste("N[",g,"]"))
   z.nodes <- Rmodel$expandNodeNames(paste("z[",g,",1:",M[g],"]"))
-  calcNodes <- c(N.node,lam.nodes,bigLam.unmarked.nodes,y.all.nodes)
+  calcNodes <- c(N.node,lam.nodes,bigLam.all.nodes,y.all.nodes)
   conf$addSampler(target = paste("N"),
                   type = 'zSampler',control = list(g=g,z.ups=z.ups[g],
                                                    J=J[g],n.marked=n.marked[g],M=M[g],
@@ -291,43 +292,31 @@ for(g in 1:N.session){
 
 #add sSampler
 #1) marked individuals
-# if no telemetry,
-# for(g in 1:N.session){
-#   for(i in 1:M[g]){
-#     conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
-#                     type = 'sSamplerMarked',control=list(i=i,J=J[g],xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],
-#                                                          n.locs.ind=0,
-#                                                          scale=0.25),silent = TRUE)
-#     #scale parameter here is just the starting scale. It will be tuned.
-#   }
-# }
-#if telemetry
-for(g in 1:N.session){
-  for(i in 1:M[g]){
-    if(i %in% nimbuild$tel.inds[g,]){#inds with telemetry
-      conf$addSampler(target = paste("s.m[",g,",",i,", 1:2]", sep=""),
-                      type = 'sSamplerMarked',control=list(g=g,i=i,J=J[g],xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],
-                                                           n.locs.ind=nimbuild$n.locs.ind[g,i],
-                                                           scale=1),silent = TRUE)
-      #scale parameter here is just the starting scale. It will be tuned.
-    }else{ #inds with no telemetry
-      conf$addSampler(target = paste("s.m[",g,",",i,", 1:2]", sep=""),
-                      type = 'sSamplerMarked',control=list(g=g,i=i,J=J[g],xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],
-                                                           n.locs.ind=0,
-                                                           scale=1),silent = TRUE)
-    }
-  }
-}
-#all individuals
-for(g in 1:N.session){
-  for(i in 1:M[g]){
-    conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
-                    type = 'sSamplerAll',control=list(g=g,i=i,J=J[g],res=nimbuild$res[g],n.cells=nimbuild$n.cells[g],
-                                                      n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g],
-                                                      xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],
-                                                      scale=1),silent = TRUE)
-  }
-}
+for(g in 1:N.session){ 
+  for(i in 1:n.marked[g]){ 
+    loc.nodes <- c() 
+    tel.idx <- which(nimbuild$tel.session==g & nimbuild$tel.ID==i) 
+    if(length(tel.idx)>0){ 
+      nloc <- nimbuild$n.locs.ind[tel.idx] 
+      if(nloc>0){ 
+        loc.nodes <- Rmodel$expandNodeNames(paste0("locs[",tel.idx,",1:",nloc,",1:2]")) 
+      } 
+    } 
+    conf$addSampler(target = paste("s.m[",g,",",i,", 1:2]", sep=""), 
+                    type = 'sSamplerMarked',control=list(i=i,g=g,J=J[g],xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,], 
+                                                         loc.nodes=loc.nodes,scale=1),silent = TRUE) 
+  } 
+} 
+
+#2) all individuals 
+for(g in 1:N.session){ 
+  for(i in 1:M[g]){ 
+    conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""), 
+                    type = 'sSamplerAll',control=list(i=i,g=g,J=J[g],res=nimbuild$res[g],n.cells=nimbuild$n.cells[g], 
+                                                      n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g], 
+                                                      xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],scale=1),silent = TRUE) 
+  } 
+} 
 
 #mixing seems generally good if you keep independent samplers and add block sampler (if data sparse enough that there is posterior correlation)
 #may not need this with telemetry

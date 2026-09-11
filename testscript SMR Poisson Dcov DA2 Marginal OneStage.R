@@ -175,8 +175,7 @@ for(i in 1:n.marked){
 D0.init <- (sum(nimbuild$z))/(sum(data$InSS)*data$res^2)
 
 #must initialize N.M and N.UM to be consistent with z. speeds converge to set consistent with lambda.N.M/UM
-Niminits <- list(s.m=nimbuild$s[1:n.marked,],
-                 z=nimbuild$z,s=nimbuild$s,D0=D0.init,D.beta1=0,
+Niminits <- list(s.m=nimbuild$s.m,z=nimbuild$z,s=nimbuild$s,D0=D0.init,D.beta1=0,
                  N=sum(nimbuild$z),lam0=inits$lam0,sigma=inits$sigma)
 
 dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the values are
@@ -197,14 +196,14 @@ dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the valu
 constants <- list(n.marked=n.marked,M=M,J=J,K1D=data$K1D,
                   D.cov=data$D.cov,cellArea=data$cellArea,n.cells=data$n.cells,
                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,res=data$res,
-                  tel.inds=nimbuild$tel.inds,
-                  n.tel.inds=length(nimbuild$tel.inds),n.locs.ind=nimbuild$n.locs.ind)
+                  tel.ID=nimbuild$tel.ID,
+                  n.tel.inds=length(nimbuild$tel.ID),n.locs.ind=nimbuild$n.locs.ind)
 Nimdata <- list(y.mID=nimbuild$y.mID, #marked with ID
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
                 y.all=nimbuild$y.all, #all detections
                 z.m=rep(1,n.marked), #fix z's for marked individuals for marked only data
                 dummy.data=dummy.data,cells=data$cells,InSS=data$InSS,
-                X=as.matrix(X),locs=data$locs)
+                X=as.matrix(X),locs=nimbuild$locs)
 
 # set parameters to monitor
 parameters <- c('D0','lambda.N','lam0','sigma','theta.thin','N','D.beta1')
@@ -234,36 +233,28 @@ conf$addSampler(target = paste("N"),
                                                  z.nodes=z.nodes,calcNodes=calcNodes),
                 silent = TRUE)
 
-#add sSamplers
+#add sSampler
 #1) marked individuals
-# if no telemetry,
-# for(i in 1:M){
-#   conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
-#                   type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-#                                                  n.locs.ind=0,
-#                                                  scale=1),silent = TRUE)
-#   #scale parameter here is just the starting scale. It will be tuned.
-# }
-#with telemetry (make sure you turn it on in model code),
 for(i in 1:n.marked){
-  if(i %in% nimbuild$tel.inds){#inds with telemetry
-    conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
-                    type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-                                                         n.locs.ind=nimbuild$n.locs.ind[i],
-                                                         scale=1),silent = TRUE)
-  }else{ #inds with no telemetry
-    conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
-                    type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-                                                         n.locs.ind=0,n.marked=n.marked,
-                                                         scale=1),silent = TRUE)
+  loc.nodes <- c()
+  tel.idx <- which(nimbuild$tel.ID==i) #map population ID i to telemetry row
+  if(length(tel.idx)>0){
+    nloc <- nimbuild$n.locs.ind[tel.idx]
+    if(nloc>0){
+      loc.nodes <- Rmodel$expandNodeNames(paste0("locs[",tel.idx,",1:",nloc,",1:2]"))
+    }
   }
+  conf$addSampler(target = paste("s.m[",i,", 1:2]", sep=""),
+                  type = 'sSamplerMarked',control=list(i=i,J=J,xlim=nimbuild$xlim,ylim=nimbuild$ylim,loc.nodes=loc.nodes, 
+                                                       scale=1),silent = TRUE) 
 }
+
 #2) all individuals
 for(i in 1:M){
   conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
                   type = 'sSamplerAll',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-                                                 xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-                                                 scale=1),silent = TRUE)
+                                                    xlim=nimbuild$xlim,ylim=nimbuild$ylim,
+                                                    scale=1),silent = TRUE)
   #scale parameter here is just the starting scale. It will be tuned.
 }
 

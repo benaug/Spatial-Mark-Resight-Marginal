@@ -7,7 +7,6 @@ sSamplerMarked <- nimbleFunction(
     J <- control$J
     xlim <- control$xlim
     ylim <- control$ylim
-    n.locs.ind <- control$n.locs.ind
     ## control list extraction
     # logScale            <- extractControlElement(control, 'log',                 FALSE)
     # reflective          <- extractControlElement(control, 'reflective',          FALSE)
@@ -20,8 +19,8 @@ sSamplerMarked <- nimbleFunction(
     calcNodes <- model$getDependencies(target)
     s.nodes <- model$expandNodeNames(paste("s.m[",g,",",i,",",1:2,"]"))
     #if we have telemetry for this individual, add locs to s.nodes
-    if(n.locs.ind>0){
-      loc.nodes <- model$expandNodeNames(paste("locs[",g,",",i,",1:",n.locs.ind,",",1:2,"]"))
+    loc.nodes <- control$loc.nodes
+    if(length(loc.nodes)>0){
       s.nodes <- c(s.nodes,loc.nodes)
     }
     y.mID.nodes <- model$expandNodeNames(paste("y.mID[",g,",",i,",1:",J,"]"))

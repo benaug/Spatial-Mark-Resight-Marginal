@@ -210,7 +210,7 @@ constants <- list(N.session=N.session,n.marked=n.marked,M=M,J=J,K1D=nimbuild$K1D
                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,D.cov=nimbuild$D.cov,res=nimbuild$res,
                   cellArea=nimbuild$cellArea,n.cells=nimbuild$n.cells,
                   #telemetry stuff
-                  tel.inds=nimbuild$tel.inds,
+                  tel.ID=nimbuild$tel.ID,tel.session=nimbuild$tel.session,
                   n.tel.inds=nimbuild$n.tel.inds,n.locs.ind=nimbuild$n.locs.ind)
 Nimdata <- list(y.mID=nimbuild$y.mID, #marked with ID
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
@@ -263,34 +263,21 @@ for(g in 1:N.session){
 }
 
 #add sSampler
-#if no telemetry,
-# for(g in 1:N.session){
-#   for(i in 1:M[g]){
-#     conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
-#                     type = 'sSampler',control=list(i=i,g=g,J=J[g],n.cells=nimbuild$n.cells[g],
-#                                                    n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g],
-#                                                    xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],res=nimbuild$res[g],
-#                                                    n.marked=n.marked[g],n.locs.ind=0,scale=1),silent = TRUE)
-#     #scale parameter here is just the starting scale. It will be tuned.
-#   }
-# }
-#if telemetry
 for(g in 1:N.session){
   for(i in 1:M[g]){
-    if(i %in% nimbuild$tel.inds[g,]){#inds with telemetry
-      conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
-                      type = 'sSampler',control=list(i=i,g=g,J=J[g],res=nimbuild$res[g],n.cells=nimbuild$n.cells[g],
-                                                     n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g],
-                                                     xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],res=nimbuild$res[g],
-                                                     n.locs.ind=nimbuild$n.locs.ind[g,i],n.marked=n.marked[g],scale=1),silent = TRUE)
-      #scale parameter here is just the starting scale. It will be tuned.
-    }else{ #inds with no telemetry
-      conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
-                      type = 'sSampler',control=list(i=i,g=g,J=J[g],res=nimbuild$res[g],n.cells=nimbuild$n.cells[g],
-                                                     n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g],
-                                                     xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],res=nimbuild$res[g],
-                                                     n.locs.ind=0,n.marked=n.marked[g],scale=1),silent = TRUE)
+    loc.nodes <- c() 
+    tel.idx <- which(nimbuild$tel.session==g & nimbuild$tel.ID==i) #map session/population ID to telemetry row
+    if(length(tel.idx)>0){
+      nloc <- nimbuild$n.locs.ind[tel.idx]
+      if(nloc>0){
+        loc.nodes <- Rmodel$expandNodeNames(paste0("locs[",tel.idx,",1:",nloc,",1:2]"))
+      }
     }
+    conf$addSampler(target = paste("s[",g,",",i,", 1:2]", sep=""),
+                    type = 'sSampler',control=list(i=i,g=g,J=J[g],res=nimbuild$res[g],n.cells=nimbuild$n.cells[g],
+                                                   n.cells.x=nimbuild$n.cells.x[g],n.cells.y=nimbuild$n.cells.y[g],
+                                                   xlim=nimbuild$xlim[g,],ylim=nimbuild$ylim[g,],res=nimbuild$res[g],
+                                                   loc.nodes=loc.nodes,n.marked=n.marked[g],scale=1),silent = TRUE)
   }
 }
 

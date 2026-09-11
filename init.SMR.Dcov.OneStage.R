@@ -39,15 +39,15 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
   if(!is.null(dim(data$locs))){
     max.locs <- dim(locs)[2]
     if(n.marked>1){
-      tel.inds <- which(rowSums(is.na(locs[,,1]))<max.locs)
+      tel.ID <- which(rowSums(is.na(locs[,,1]))<max.locs)
       n.locs.ind <- rowSums(!is.na(locs[,,1]))
     }else{
-      tel.inds <- which(sum(is.na(locs[,,1]))<max.locs)
+      tel.ID <- which(sum(is.na(locs[,,1]))<max.locs)
       n.locs.ind <- sum(!is.na(locs[,,1]))
     }
     print("using telemetry to initialize telemetered s. Remove from data if not using in the model.")
-    #update s starts for telemetry guys
-    for(i in tel.inds){
+    #update using telemetry if you have it
+    for(i in tel.ID){
       if(n.locs.ind[i]>1){
         s.init[i,] <- colMeans(locs[i,1:n.locs.ind[i],])
       }else{
@@ -67,9 +67,10 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
         s.init[i,2] <- ylim[2] - 0.01
       }
     }
-    n.locs.ind <- n.locs.ind[tel.inds]
+    n.locs.ind <- n.locs.ind[tel.ID]
+    locs <- locs[tel.ID,,,drop=FALSE]
   }else{
-    tel.inds <- NA
+    tel.ID <- NA
     n.locs.ind <- NA
   }
   D <- e2dist(s.init, X)
@@ -91,6 +92,25 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
       s.init[i,] <- c(mean(trps[,1]),mean(trps[,2]))
     }else{
       s.init[i,] <- trps
+    }
+  }
+  
+  #separate marked-only activity centers from second-stage activity centers 
+  s.m.init <- s.init[1:n.marked,]
+  
+  #use telemetry to initialize marked-only activity centers
+  if(!all(is.na(tel.ID))){
+    for(t in 1:length(tel.ID)){
+      i <- tel.ID[t]
+      if(n.locs.ind[t]>1){
+        s.m.init[i,] <- colMeans(locs[t,1:n.locs.ind[t],])
+      }else{
+        s.m.init[i,] <- locs[t,1,]
+      }
+      if(s.m.init[i,1]<xlim[1]) s.m.init[i,1] <- xlim[1] + 0.01
+      if(s.m.init[i,1]>xlim[2]) s.m.init[i,1] <- xlim[2] - 0.01
+      if(s.m.init[i,2]<ylim[1]) s.m.init[i,2] <- ylim[1] + 0.01
+      if(s.m.init[i,2]>ylim[2]) s.m.init[i,2] <- ylim[2] - 0.01
     }
   }
   
@@ -138,6 +158,17 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
       s.init[i,] <- data$dSS[new.cell,]
     }
   }
+  #make sure s.m inits are in habitat 
+  alldists.m <- e2dist(s.m.init,data$dSS) 
+  alldists.m[,data$InSS==0] <- Inf 
+  for(i in 1:n.marked){ 
+    this.cell <- data$cells[trunc(s.m.init[i,1]/data$res)+1,trunc(s.m.init[i,2]/data$res)+1] 
+    if(data$InSS[this.cell]==0){ 
+      new.cell <- which(alldists.m[i,]==min(alldists.m[i,])) 
+      s.m.init[i,] <- data$dSS[new.cell,] 
+    } 
+  } 
+  
   
   D <- e2dist(s.init, X)
   lamd <- lam0*exp(-D*D/(2*sigma*sigma))
@@ -166,8 +197,8 @@ init.SMR.Dcov.OneStage <- function(data,inits=NA,M=NA){
     logProb[j] <- dpois(y.mnoID[j],lamd.mnoID[j]*data$K1D[j])
   }
  
-  return(list(s=s.init,z=z.init,K1D=K1D,
+  return(list(s=s.init,s.m=s.m.init,z=z.init,K1D=K1D,
               y.mID=y.mID,y.mnoID=y.mnoID,y.all=y.all,
-              xlim=xlim,ylim=ylim,locs=locs,tel.inds=tel.inds,n.locs.ind=n.locs.ind))
+              xlim=xlim,ylim=ylim,locs=locs,tel.ID=tel.ID,n.locs.ind=n.locs.ind))
 
 }

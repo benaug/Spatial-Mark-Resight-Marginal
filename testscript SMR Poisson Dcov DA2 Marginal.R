@@ -184,14 +184,14 @@ dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the valu
 constants <- list(n.marked=n.marked,M=M,J=J,K1D=data$K1D,
                   D.cov=data$D.cov,cellArea=data$cellArea,n.cells=data$n.cells,
                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,res=data$res,
-                  tel.inds=nimbuild$tel.inds,
-                  n.tel.inds=length(nimbuild$tel.inds),n.locs.ind=nimbuild$n.locs.ind)
+                  tel.ID=nimbuild$tel.ID,
+                  n.tel.inds=length(nimbuild$tel.ID),n.locs.ind=nimbuild$n.locs.ind)
 Nimdata <- list(y.mID=nimbuild$y.mID, #marked with ID
                 y.mnoID=nimbuild$y.mnoID, #marked without ID
                 y.um=nimbuild$y.um, #unmarked
                 y.unk=nimbuild$y.unk, #unk marked status
                 dummy.data=dummy.data,cells=data$cells,InSS=data$InSS,
-                X=as.matrix(X),locs=data$locs)
+                X=as.matrix(X),locs=nimbuild$locs)
 
 # set parameters to monitor
 parameters <- c('D0','lambda.N','lam0','sigma','theta.marked','theta.unmarked',
@@ -228,28 +228,19 @@ conf$addSampler(target = paste("N"),
                 silent = TRUE)
 
 #add sSampler
-# if no telemetry,
-# for(i in 1:M){
-#   conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-#                   type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-#                                                  xlim=nimbuild$xlim,ylim=nimbuild$ylim,
-#                                                  n.marked=n.marked,n.locs.ind=0,
-#                                                  scale=0.25),silent = TRUE)
-#   #scale parameter here is just the starting scale. It will be tuned.
-# }
-#with telemetry (make sure you turn it on in model code),
 for(i in 1:M){
-  if(i %in% nimbuild$tel.inds){#inds with telemetry
-    conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-                    type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-                                                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,n.locs.ind=nimbuild$n.locs.ind[i],
-                                                   n.marked=n.marked,scale=0.25),silent = TRUE)
-  }else{ #inds with no telemetry
-    conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
-                    type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
-                                                   xlim=nimbuild$xlim,ylim=nimbuild$ylim,n.locs.ind=0,
-                                                   n.marked=n.marked,scale=0.25),silent = TRUE)
+  loc.nodes <- c()
+  tel.idx <- which(nimbuild$tel.ID==i) #map population ID i to telemetry row
+  if(length(tel.idx)>0){
+    nloc <- nimbuild$n.locs.ind[tel.idx]
+    if(nloc>0){
+      loc.nodes <- Rmodel$expandNodeNames(paste0("locs[",tel.idx,",1:",nloc,",1:2]"))
+    }
   }
+  conf$addSampler(target = paste("s[",i,", 1:2]", sep=""),
+                  type = 'sSampler',control=list(i=i,J=J,res=data$res,n.cells.x=data$n.cells.x,n.cells.y=data$n.cells.y,
+                                                 xlim=nimbuild$xlim,ylim=nimbuild$ylim,loc.nodes=loc.nodes, 
+                                                 n.marked=n.marked,scale=0.25),silent = TRUE) 
 }
 
 #can add block sampler if lam0, sigma, and/or lambda.N posteriors highly correlated

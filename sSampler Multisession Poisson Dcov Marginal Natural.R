@@ -11,7 +11,6 @@ sSampler <- nimbleFunction(
     n.cells <- control$n.cells
     n.cells.x <- control$n.cells.x
     n.cells.y <- control$n.cells.y
-    n.locs.ind <- control$n.locs.ind
     M1 <- control$M1
     ## control list extraction
     # logScale            <- extractControlElement(control, 'log',                 FALSE)

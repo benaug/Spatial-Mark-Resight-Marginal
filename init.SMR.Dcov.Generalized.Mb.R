@@ -99,15 +99,15 @@ init.SMR.Dcov.Generalized.Mb <- function(data,inits=NA,M=NA){
   if(!is.null(dim(data$locs))){
     max.locs <- dim(locs)[2]
     if(n.marked>1){
-      tel.inds <- which(rowSums(is.na(locs[,,1]))<max.locs)
+      tel.ID <- which(rowSums(is.na(locs[,,1]))<max.locs)
       n.locs.ind <- rowSums(!is.na(locs[,,1]))
     }else{
-      tel.inds <- which(sum(is.na(locs[,,1]))<max.locs)
+      tel.ID <- which(sum(is.na(locs[,,1]))<max.locs)
       n.locs.ind <- sum(!is.na(locs[,,1]))
     }
     print("using telemetry to initialize telemetered s. Remove from data if not using in the model.")
     #update using telemetry if you have it
-    for(i in tel.inds){
+    for(i in tel.ID){
       if(n.locs.ind[i]>1){
         s.init[i,] <- colMeans(locs[i,1:n.locs.ind[i],])
       }else{
@@ -127,9 +127,10 @@ init.SMR.Dcov.Generalized.Mb <- function(data,inits=NA,M=NA){
         s.init[i,2] <- ylim[2] - 0.01
       }
     }
-    n.locs.ind <- n.locs.ind[tel.inds]
+    n.locs.ind <- n.locs.ind[tel.ID]
+    locs <- locs[tel.ID,,,drop=FALSE]
   }else{
-    tel.inds <- NA
+    tel.ID <- NA
     n.locs.ind <- NA
   }
   
@@ -244,6 +245,6 @@ init.SMR.Dcov.Generalized.Mb <- function(data,inits=NA,M=NA){
   
   return(list(s=s.init,z=z.init,K1D.mark.p=K1D.mark.p,K1D.mark.c=K1D.mark.c,K1D.sight=K1D.sight,
               y.mark.p=y.mark.p,y.mark.c=y.mark.c,y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,
-              xlim=xlim,ylim=ylim,locs=locs,tel.inds=tel.inds,n.locs.ind=n.locs.ind))
+              xlim=xlim,ylim=ylim,locs=locs,tel.ID=tel.ID,n.locs.ind=n.locs.ind))
 
 }

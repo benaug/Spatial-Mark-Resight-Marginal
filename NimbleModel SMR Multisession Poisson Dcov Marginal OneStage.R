@@ -52,13 +52,12 @@ NimModel <- nimbleCode({
     }#custom Metropolis-Hastings update for N.M/z[1:n.marked] 
     bigLam.all[g,1:J[g]] <- GetbigLam(lam=lam[g,1:M[g],1:J[g]],z=z[g,1:M[g]])
     y.all[g,1:J[g]] ~ dPoissonVector(bigLam.all[g,1:J[g]]*K1D[g,1:J[g]],z=1) #plug in z=1 to reuse dPoissonVector
-    
-    #If you have telemetry
-    for(i in 1:n.tel.inds[g]){
-      for(m in 1:n.locs.ind[g,i]){
-        locs[g,i,m,1] ~ dnorm(s.m[g,tel.inds[g,i],1],sd=sigma[g])
-        locs[g,i,m,2] ~ dnorm(s.m[g,tel.inds[g,i],2],sd=sigma[g])
-      }
+  }
+  #If you have telemetry
+  for(i in 1:n.tel.inds){
+    for(m in 1:n.locs.ind[i]){
+      locs[i,m,1] ~ dnorm(s.m[tel.session[i],tel.ID[i],1],sd=sigma[tel.session[i]])
+      locs[i,m,2] ~ dnorm(s.m[tel.session[i],tel.ID[i],2],sd=sigma[tel.session[i]])
     }
   }
 })# end model

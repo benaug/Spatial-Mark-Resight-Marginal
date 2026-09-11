@@ -17,29 +17,42 @@ init.SMR.multisession.Dcov.Interspersed <- function(data,inits=NA,M=NA){
     init.session[[g]] <- init.SMR.Dcov.Interspersed(data[[g]],inits.use,M=M[g])
   }
   anyTelemetry <- FALSE
-  locs.use <- vector("list",N.session)
-  tlocs.sess.max <- rep(NA,N.session)
+  n.tel.inds <- 0
   for(g in 1:N.session){
-    if(all(is.na(init.session[[g]]$locs))){
-      locs.use <- NA
-    }else{
-      if(n.marked[g]>1){
-        tlocs.sess.max[g] <- max(rowSums(!is.na(init.session[[g]]$locs[1:n.marked[g],,1])))
-        locs.use[[g]] <- init.session[[g]]$locs[1:n.marked[g],1:tlocs.sess.max[g],1:2]
-      }else{
-        tlocs.sess.max[g] <- sum(!is.na(init.session[[g]]$locs[1:n.marked[g],,1]))
-        locs.use[[g]] <- array(init.session[[g]]$locs[1,1:tlocs.sess.max[g],1:2],dim=dim(init.session[[g]]$locs))
-      }
+    if(!all(is.na(init.session[[g]]$tel.ID))){
+      n.tel.inds <- n.tel.inds + length(init.session[[g]]$tel.ID)
       anyTelemetry <- TRUE
     }
   }
-  
   if(anyTelemetry){
-    n.tel.inds <- unlist(lapply(locs.use,nrow))
-    n.locs.ind <- matrix(NA,N.session,max(n.tel.inds))
-    tel.inds <- matrix(NA,N.session,max(n.tel.inds))
+    tel.ID <- rep(NA,n.tel.inds) #population ID within session for each telemetry row
+    tel.session <- rep(NA,n.tel.inds) #session for each telemetry row
+    n.locs.ind <- rep(NA,n.tel.inds) #number of locations for each telemetry row
+    max.tel.locs <- 0
+    for(g in 1:N.session){
+      if(!all(is.na(init.session[[g]]$tel.ID))){
+        this.max <- max(init.session[[g]]$n.locs.ind)
+        if(this.max>max.tel.locs){
+          max.tel.locs <- this.max
+        }
+      }
+    }
+    locs.use2 <- array(NA,dim=c(n.tel.inds,max.tel.locs,2))
+    ii <- 0
+    for(g in 1:N.session){
+      if(!all(is.na(init.session[[g]]$tel.ID))){
+        for(t in 1:length(init.session[[g]]$tel.ID)){
+          ii <- ii + 1
+          tel.ID[ii] <- init.session[[g]]$tel.ID[t] 
+          tel.session[ii] <- g 
+          n.locs.ind[ii] <- init.session[[g]]$n.locs.ind[t] 
+          locs.use2[ii,1:n.locs.ind[ii],] <- init.session[[g]]$locs[t,1:n.locs.ind[ii],]
+        }
+      }
+    }
   }else{
-    tel.inds <- n.locs.ind <- n.tel.inds <- NA
+    tel.ID <- tel.session <- n.locs.ind <- n.tel.inds <- NA
+    locs.use2 <- NA
   }
  
   J <- unlist(lapply(data,function(x){nrow(x$X)}))
@@ -88,25 +101,6 @@ init.SMR.multisession.Dcov.Interspersed <- function(data,inits=NA,M=NA){
     InSS[g,1:n.cells[g]] <- data[[g]]$InSS
     D.cov[g,1:n.cells[g]] <- data[[g]]$D.cov
     cells[g,1:n.cells.x[g],1:n.cells.y[g]] <- data[[g]]$cells
-    if(anyTelemetry){
-      tel.inds[g,1:n.tel.inds[g]] <- init.session[[g]]$tel.inds
-      n.locs.ind[g,1:n.tel.inds[g]] <- init.session[[g]]$n.locs.ind
-    }
-  }
-  if(anyTelemetry){
-    #reformat locs.use actually
-    locs.use2 <- array(NA,dim=c(N.session,max(n.tel.inds,na.rm=TRUE),max(n.locs.ind,na.rm=TRUE),2))
-    for(g in 1:N.session){
-      locs.use2[g,1:nrow(locs.use[[g]]),1:ncol(locs.use[[g]]),] <- locs.use[[g]]
-    }
-    #remove unused telemetry dimensions if not all marked individuals telemetered 
-    rem.idx <- which(colSums(is.na(n.locs.ind))==N.session)
-    if(length(rem.idx)>0){
-      n.locs.ind <- n.locs.ind[,-rem.idx]
-      tel.inds <- tel.inds[,-rem.idx]
-    }
-  }else{
-    locs.use2 <- NA
   }
   
   #put X in ragged array
@@ -119,7 +113,8 @@ init.SMR.multisession.Dcov.Interspersed <- function(data,inits=NA,M=NA){
 
   return(list(y.mID=y.mID,y.mnoID=y.mnoID,y.um=y.um,y.unk=y.unk,marked.status=marked.status,
               s.init=s,z.init=z,K2D=K2D,J=J,K=K,X=X.new,n.marked=n.marked,
-              xlim=xlim,ylim=ylim,locs=locs.use2,tel.inds=tel.inds,n.locs.ind=n.locs.ind,n.tel.inds=n.tel.inds,
+              xlim=xlim,ylim=ylim,locs=locs.use2,tel.ID=tel.ID,tel.session=tel.session,
+              n.locs.ind=n.locs.ind,n.tel.inds=n.tel.inds, 
               res=res,cellArea=cellArea,x.vals=x.vals,xlim=xlim,ylim=ylim,
               y.vals=y.vals,dSS=dSS,InSS=InSS,cells=cells,n.cells=n.cells,n.cells.x=n.cells.x,
               n.cells.y=n.cells.y,D.cov=D.cov,dummy.data=dummy.data))
